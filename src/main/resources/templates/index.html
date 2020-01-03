@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script type="text/javascript">
+
+        $(function () {
+
+            $('#GetChannelLiveData').click(function () {
+                var data = {
+                    id: $("#id").val(),
+                    word: $("#word").val(),
+                    meaning: $("#meaning").val()
+                }
+                $.ajax({
+                    type: 'post',
+                    url: '/',
+                    data: { "id": "GetChannelLiveData" }
+                })
+            })
+        })
+    </script>
+    <title>インデックス</title>
+</head>
+
+<body>
+    <button id="GetChannelLiveData">RSSXML取得</button>
+    <br>
+</body>
+
+</html>
