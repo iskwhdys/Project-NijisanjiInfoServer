@@ -13,23 +13,39 @@ import org.springframework.web.client.RestTemplate;
 import com.iskwhdys.project.Constans;
 import com.iskwhdys.project.domain.channel.ChannelEntity;
 import com.iskwhdys.project.domain.channel.ChannelRepository;
+import com.iskwhdys.project.domain.video.VideoEntity;
+import com.iskwhdys.project.domain.video.VideoRepository;
+import com.iskwhdys.project.interfaces.video.VideoFactory;
 
 @Controller
 public class ProcessController {
 
 	RestTemplate restTemplate = new RestTemplate();
+
 	@Autowired
 	ChannelRepository channelRepository;
+	@Autowired
+	VideoRepository videoRepository;
 
 	@ResponseBody
 	@RequestMapping(value = "/process", method = RequestMethod.GET)
 	public String process(@RequestParam("name") String name) {
+		System.out.println("process-start:" + name);
 		switch (name) {
 		case "transportChannelJsonServerToPostgreSql":
 			transportChannelJsonServerToPostgreSql();
 			break;
+
+		case "updateChannelVideos":
+			updateChannelVideos();
+			break;
+
+		case "updateChannelVideoFromRssFeedXml":
+			updateChannelVideoFromRssFeedXml();
+			break;
 		}
 
+		System.out.println("process-end:" + name);
 		return "Complate:" + name;
 	}
 
@@ -57,6 +73,52 @@ public class ProcessController {
 			entity.setThumbnail(thumbnail);
 
 			channelRepository.save(entity);
+		}
+	}
+
+	/**
+	 *
+	 */
+	private void updateChannelVideoFromRssFeedXml() {
+		for (ChannelEntity entity : channelRepository.findAll()) {
+			if (entity.getId().contains("UCwokZsOK_uEre70XayaFnzA") == false)
+				continue;
+
+			System.out.println("Channel:[" + entity.getId() + "] [" + entity.getTitle() + "]");
+			var entities = VideoFactory.getChannelVideosFromRssFeedXml(entity.getId());
+			videoRepository.saveAll(entities);
+		}
+
+		for (ChannelEntity entity : channelRepository.findAll()) {
+			if (entity.getId().contains("UCwokZsOK_uEre70XayaFnzA") == false)
+				continue;
+			System.out.println("Channel:[" + entity.getId() + "] [" + entity.getTitle() + "]");
+
+			var entities = videoRepository.findChannelId(entity.getId());
+			for (VideoEntity videoEntity : entities) {
+				VideoFactory.updateVideoEntity(videoEntity);
+			}
+
+			videoRepository.saveAll(entities);
+		}
+	}
+
+	private void updateChannelVideos() {
+		for (ChannelEntity entity : channelRepository.findAll()) {
+			var entities = VideoFactory.getChannelVideosFromRssFeedXml(entity.getId());
+			videoRepository.saveAll(entities);
+		}
+
+		for (ChannelEntity entity : channelRepository.findAll()) {
+			var entities = videoRepository.findNewData(entity.getId());
+
+			for (VideoEntity videoEntity : entities) {
+				if (videoEntity.getEtag() == null) {
+					VideoFactory.updateVideoEntity(videoEntity);
+				}
+			}
+
+			videoRepository.saveAll(entities);
 		}
 	}
 
