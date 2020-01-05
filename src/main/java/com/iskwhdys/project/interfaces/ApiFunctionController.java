@@ -1,4 +1,4 @@
-package com.iskwhdys.project;
+package com.iskwhdys.project.interfaces;
 
 import java.util.Base64;
 import java.util.Map;
@@ -18,9 +18,8 @@ import org.springframework.web.client.RestTemplate;
 
 @CrossOrigin
 @Controller
-public class FrontController {
+public class ApiFunctionController {
 
-	DataAccessor dataAccessor = new DataAccessor();
 	RestTemplate restTemplate = new RestTemplate();
 
 	@RequestMapping(value = "/", method = RequestMethod.GET)
