@@ -14,6 +14,9 @@ public final class Constans {
 
 	public static final String YOUTUBE_API_KEY;
 
+	public static final int UTC_TIME = 9;
+
+
 	static {
 		String key = "";
 
