@@ -17,4 +17,10 @@ public interface VideoRepository extends JpaRepository<VideoEntity, String> {
     @Query(value = "select * from public.today_upload_videos o where channel_id = :channelId" , nativeQuery = true)
     List<VideoEntity> findToday(@Param("channelId")String channelId);
 
+    @Query(value = "select * from public.today_upload_videos" , nativeQuery = true)
+    List<VideoEntity> findTodayUpload();
+
+
+
+
 }

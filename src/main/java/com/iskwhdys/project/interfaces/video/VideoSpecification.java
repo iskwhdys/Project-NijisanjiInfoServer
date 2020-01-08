@@ -98,7 +98,7 @@ public class VideoSpecification {
 			double ave = (like + dislike)  / (double)count;
 			int num = (int)(ave * 100);
 
-			if (num == starAve) {
+			if (num <= starAve) {
 				return i;
 			}
 		}
