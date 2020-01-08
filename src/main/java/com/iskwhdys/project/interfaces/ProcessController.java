@@ -12,6 +12,7 @@ import com.iskwhdys.project.application.ChannelService;
 import com.iskwhdys.project.domain.channel.ChannelEntity;
 import com.iskwhdys.project.domain.channel.ChannelRepository;
 import com.iskwhdys.project.domain.video.VideoRepository;
+import com.iskwhdys.project.interfaces.video.VideoSpecification;
 
 @Controller
 public class ProcessController {
@@ -44,15 +45,22 @@ public class ProcessController {
 				channelService.updateTodayUploadVideos(channel);
 			}
 			break;
+
+			// 全てのXMLの取得更新 + 新規動画のみAPIでデータ取得
 		case "updateRealTime":
 			for (ChannelEntity channel : channelRepository.findAll()) {
 				channelService.updateRealTime(channel);
 			}
 			break;
+
+			// ライブ状態の更新
 		case "updateLiveVideo":
-			for (ChannelEntity channel : channelRepository.findAll()) {
-				channelService.updateLiveVideo(channel);
+			var videos = videoRepository.findLive();
+			for (var video : videos) {
+				VideoSpecification.updateViaApi(video, restTemplate);
+				System.out.println("Live - Channel:[" + video.getChannelId() + "] Video:[" + video.getId() + "] [" + video.getTitle() + "]");
 			}
+			videoRepository.saveAll(videos);
 			break;
 		}
 

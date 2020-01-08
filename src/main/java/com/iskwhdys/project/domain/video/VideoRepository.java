@@ -20,6 +20,16 @@ public interface VideoRepository extends JpaRepository<VideoEntity, String> {
     @Query(value = "select * from public.today_upload_videos" , nativeQuery = true)
     List<VideoEntity> findTodayUpload();
 
+    @Query(value = "select * from public.videos "
+    		+ "where live_schedule is not null "
+    		+ "and   live_end is null"
+    		+ "and   views > 0 "
+    		+ "and   enabled = true "
+    		+ "order by live_start desc" , nativeQuery = true)
+    List<VideoEntity> findLive();
+
+
+
 
 
 

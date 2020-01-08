@@ -26,4 +26,11 @@ public class ApiController {
 		return videoRepository.findTodayUpload() ;
 	}
 
+	@ResponseBody
+	@RequestMapping(value = "/api/liveVideos", method = RequestMethod.GET)
+	public List<VideoEntity> getliveVideos(Model model) {
+		return videoRepository.findLive() ;
+	}
+
+
 }

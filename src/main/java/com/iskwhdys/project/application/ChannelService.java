@@ -119,37 +119,6 @@ public class ChannelService {
 		return videos;
 	}
 
-	public List<VideoEntity> updateLiveVideo(ChannelEntity channel) {
-
-		// XMLからVideoEntityを生成
-		byte[] bytes = restTemplate.getForObject(Constans.FEEDS_URL + "?channel_id=" + channel.getId(), byte[].class);
-		var elements = bytesToElementList(bytes, "entry");
-		var videos = new ArrayList<VideoEntity>();
-
-		for (var element : elements) {
-			String id = element.getChildren().stream().filter(e -> e.getName().equals("videoId")).findFirst().get()
-					.getValue();
-			var video = videoRepository.findById(id).orElse(null);
-			if (video == null) {
-				video = VideoFactory.createViaXmlElement(element);
-				VideoSpecification.setThumbnail(video, restTemplate);
-				VideoSpecification.updateViaApi(video, restTemplate);
-				System.out.println("New - Channel:[" + channel.getId() + "] [" + channel.getTitle() + "] Video:[" + video.getId() + "] [" + video.getTitle() + "]");
-			} else {
-				video = VideoFactory.updateViaXmlElement(element, video, false);
-
-				if(video.getLiveSchedule() != null && video.getLiveEnd() == null && video.getViews() > 0) {
-					VideoSpecification.updateViaApi(video, restTemplate);
-					System.out.println("Live - Channel:[" + channel.getId() + "] [" + channel.getTitle() + "] Video:[" + video.getId() + "] [" + video.getTitle() + "]");
-				}
-			}
-
-			videos.add(video);
-		}
-		videoRepository.saveAll(videos);
-		return videos;
-	}
-
 
 	private List<Element> bytesToElementList(byte[] xmlBytes, String name) {
 
