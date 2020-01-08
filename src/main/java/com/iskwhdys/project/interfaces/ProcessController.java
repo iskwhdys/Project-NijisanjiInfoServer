@@ -30,23 +30,56 @@ public class ProcessController {
 	public String process(@RequestParam("name") String name) {
 		System.out.println("process-start:" + name);
 
-		String response = "";
-
+		var res = new StringBuilder();
 		switch (name) {
 		case "transportChannelJsonServerToPostgreSql":
 			transportChannelJsonServerToPostgreSql();
 			break;
 
 		case "updateVideos":
-			response = updateVideos();
+			res.append(updateVideos());
+			break;
+
+		case "createNewVideosViaXml":
+			for (ChannelEntity channel : channelRepository.findAll()) {
+				var videos = channelService.createNewVideosViaXml(channel);
+				videos.forEach(v -> res.append(v.getTitle()).append("<br>"));
+			}
+			break;
+
+		case "updateAllVideosViaXml":
+			for (ChannelEntity channel : channelRepository.findAll()) {
+				var videos = channelService.updateAllVideosViaXml(channel);
+				videos.forEach(v -> res.append(v.getTitle()).append("<br>"));
+			}
 			break;
 
 		}
 
-		System.out.println(response);
+		System.out.println(res.toString());
 		System.out.println("process-end:" + name);
-		return "Complate:" + name + "<br>" + response;
+		return "Complate:" + name + "<br>" + res.toString();
 	}
+
+	private String updateVideos() {
+		var res = new StringBuilder();
+
+		for (ChannelEntity channel : channelRepository.findAll()) {
+			var newVideos = channelService.createNewVideos(channel);
+			newVideos.forEach(v -> res.append(v.getTitle()).append("<br>"));
+		}
+
+		for (ChannelEntity channel : channelRepository.findAll()) {
+			var newVideos = channelService.updateTodayUploadVideo(channel);
+			newVideos.forEach(v -> res.append(v.getTitle()).append("<br>"));
+
+			// IskDebug
+			break;
+		}
+
+		return res.toString();
+	}
+
 
 	/**
 	 * JSON Server上のチャンネルデータをRDBに転送する
@@ -75,23 +108,5 @@ public class ProcessController {
 		}
 	}
 
-	private String updateVideos() {
-		var res = new StringBuilder();
-
-		for (ChannelEntity channel : channelRepository.findAll()) {
-			var newVideos = channelService.createNewVideos(channel);
-			newVideos.forEach(v -> res.append(v.getTitle()).append("<br>"));
-		}
-
-		for (ChannelEntity channel : channelRepository.findAll()) {
-			var newVideos = channelService.updateTodayUploadVideo(channel);
-			newVideos.forEach(v -> res.append(v.getTitle()).append("<br>"));
-
-			// IskDebug
-			break;
-		}
-
-		return res.toString();
-	}
 
 }

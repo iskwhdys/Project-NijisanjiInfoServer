@@ -1,6 +1,7 @@
 package com.iskwhdys.project.application;
 
 import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,13 +45,58 @@ public class ChannelService {
 		newVideos.forEach(v -> VideoSpecification.setThumbnail(v, restTemplate));
 
 		// その他の情報を取得
-		newVideos.forEach(v ->  VideoSpecification.updateViaApi(v, restTemplate));
+		newVideos.forEach(v -> VideoSpecification.updateViaApi(v, restTemplate));
 
 		videoRepository.saveAll(newVideos);
 
 		return newVideos;
 	}
 
+	public List<VideoEntity> createNewVideosViaXml(ChannelEntity channel) {
+		System.out.println("Channel:[" + channel.getId() + "] [" + channel.getTitle() + "]");
+
+		// XMLからVideoEntityを生成
+		byte[] bytes = restTemplate.getForObject(Constans.FEEDS_URL + "?channel_id=" + channel.getId(), byte[].class);
+		var elements = bytesToElementList(bytes, "entry");
+		var videos = new ArrayList<VideoEntity>();
+
+		for (var element : elements) {
+			String id = element.getChildren().stream().filter(e -> e.getName().equals("videoId")).findFirst().get()
+					.getValue();
+			var video = videoRepository.findById(id).orElse(null);
+			if (video == null) {
+				video = VideoFactory.createViaXmlElement(element);
+				VideoSpecification.setThumbnail(video, restTemplate);
+				videos.add(video);
+			}
+		}
+		videoRepository.saveAll(videos);
+		return videos;
+	}
+
+	public List<VideoEntity> updateAllVideosViaXml(ChannelEntity channel) {
+		System.out.println("Channel:[" + channel.getId() + "] [" + channel.getTitle() + "]");
+
+		// XMLからVideoEntityを生成
+		byte[] bytes = restTemplate.getForObject(Constans.FEEDS_URL + "?channel_id=" + channel.getId(), byte[].class);
+		var elements = bytesToElementList(bytes, "entry");
+		var videos = new ArrayList<VideoEntity>();
+
+		for (var element : elements) {
+			String id = element.getChildren().stream().filter(e -> e.getName().equals("videoId")).findFirst().get()
+					.getValue();
+			var video = videoRepository.findById(id).orElse(null);
+			if (video == null) {
+				video = VideoFactory.createViaXmlElement(element);
+				VideoSpecification.setThumbnail(video, restTemplate);
+			} else {
+				video = VideoFactory.updateViaXmlElement(element, video, false);
+			}
+			videos.add(video);
+		}
+		videoRepository.saveAll(videos);
+		return videos;
+	}
 
 	public List<VideoEntity> updateTodayUploadVideo(ChannelEntity channel) {
 		System.out.println("Channel:[" + channel.getId() + "] [" + channel.getTitle() + "]");
@@ -66,10 +112,6 @@ public class ChannelService {
 		return videos;
 	}
 
-
-
-
-
 	private List<Element> bytesToElementList(byte[] xmlBytes, String name) {
 
 		var is = new ByteArrayInputStream(xmlBytes);
@@ -83,4 +125,5 @@ public class ChannelService {
 
 		return list;
 	}
+
 }

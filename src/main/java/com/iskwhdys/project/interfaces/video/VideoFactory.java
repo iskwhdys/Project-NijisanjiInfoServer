@@ -8,10 +8,13 @@ import com.iskwhdys.project.domain.video.VideoEntity;
 public class VideoFactory {
 
 	public static VideoEntity createViaXmlElement(Element entry) {
+		return updateViaXmlElement(entry, new VideoEntity(), true);
 
-		var entity = new VideoEntity();
+	}
+
+	public static VideoEntity updateViaXmlElement(Element entry, VideoEntity entity, Boolean isUpdateThumbnail) {
+
 		Element group = null;
-
 		for (Element element : entry.getChildren()) {
 			switch (element.getName()) {
 			case "videoId":
@@ -31,13 +34,41 @@ public class VideoFactory {
 				break;
 			}
 		}
+		if (group == null)
+			return entity;
+
+		Element community = null;
 		for (Element element : group.getChildren()) {
 			switch (element.getName()) {
 			case "description":
 				entity.setDescription(element.getValue());
 				break;
 			case "thumbnail":
-				entity.setThumbnail(element.getAttributeValue("url"));
+				if (isUpdateThumbnail) {
+					entity.setThumbnail(element.getAttributeValue("url"));
+				}
+				break;
+			case "community":
+				community = element;
+				break;
+			}
+		}
+		if (community == null)
+			return entity;
+
+		for (Element element : community.getChildren()) {
+			switch (element.getName()) {
+			case "starRating":
+				int count = Integer.parseInt(element.getAttributeValue("count").toString());
+				String ave = element.getAttributeValue("average").toString();
+				int like = VideoSpecification.getLikeCount(count, ave);
+				int dislike = count - like;
+				entity.setLikes(like);
+				entity.setDislikes(dislike);
+
+				break;
+			case "statistics":
+				entity.setViews(Integer.parseInt(element.getAttributeValue("views").toString()));
 				break;
 			}
 		}

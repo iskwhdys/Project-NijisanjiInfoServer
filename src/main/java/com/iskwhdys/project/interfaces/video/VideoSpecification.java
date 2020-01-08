@@ -89,4 +89,23 @@ public class VideoSpecification {
 
 	}
 
+	public static int getLikeCount(int count, String strStarAve) {
+		int starAve = Integer.parseInt( strStarAve.replace(".", ""));
+
+		for (int i = count; i > 0; i--) {
+			double like = Constans.YOUTUBE_LIKE_VALUE * i;
+			double dislike = Constans.YOUTUBE_DISLIKE_VALUE * (count - i);
+			double ave = (like + dislike)  / (double)count;
+			int num = (int)(ave * 100);
+
+			if (num == starAve) {
+				return i;
+			}
+		}
+
+		return 0;
+	}
+
+
+
 }

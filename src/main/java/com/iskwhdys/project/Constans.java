@@ -16,6 +16,9 @@ public final class Constans {
 
 	public static final int UTC_TIME = 9;
 
+	public static final int YOUTUBE_LIKE_VALUE = 5;
+	public static final int YOUTUBE_DISLIKE_VALUE = 1;
+
 
 	static {
 		String key = "";
