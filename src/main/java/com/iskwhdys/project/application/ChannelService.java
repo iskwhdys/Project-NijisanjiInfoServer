@@ -111,7 +111,8 @@ public class ChannelService {
 
 				System.out.println("Video:[" + video.getId() + "] [" + video.getTitle() + "] - New");
 			} else {
-				video = VideoFactory.updateViaXmlElement(element, video, false);
+				video = VideoFactory.updateViaXmlElement(element, video, true);
+				VideoSpecification.setThumbnail(video, restTemplate);
 			}
 			videos.add(video);
 		}

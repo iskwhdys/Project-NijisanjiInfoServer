@@ -2,6 +2,7 @@ package com.iskwhdys.project.interfaces;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -15,6 +16,7 @@ import com.iskwhdys.project.domain.video.VideoRepository;
 import com.iskwhdys.project.interfaces.video.VideoSpecification;
 
 @Controller
+@CrossOrigin
 public class ProcessController {
 
 	RestTemplate restTemplate = new RestTemplate();
@@ -28,8 +30,8 @@ public class ProcessController {
 	ChannelService channelService;
 
 	@ResponseBody
-	@RequestMapping(value = "/process", method = RequestMethod.GET)
-	public String process(@RequestParam("name") String name) {
+	@RequestMapping(value = "/batch", method = RequestMethod.GET)
+	public String batch(@RequestParam("name") String name) {
 		System.out.println("process-start:" + name);
 
 		switch (name) {
@@ -46,22 +48,53 @@ public class ProcessController {
 			}
 			break;
 
-			// 全てのXMLの取得更新 + 新規動画のみAPIでデータ取得
-		case "updateRealTime":
+		case "updateNullEtagDataViaApi": {
+			var videos = videoRepository.findNewData();
+			for (var video : videos) {
+				VideoSpecification.updateViaApi(video, restTemplate);
+				System.out.println("Channel:[" + video.getChannelId() + "] Video:[" + video.getId() + "] ["
+						+ video.getTitle() + "]");
+				videoRepository.save(video);
+			}
+
+			break;
+		}
+
+		// 定期ジョブ
+		case "update10min": {
+			for (ChannelEntity channel : channelRepository.findAll()) {
+				channelService.updateRealTime(channel);
+			}
+			var videos = videoRepository.findLive();
+			for (var video : videos) {
+				VideoSpecification.updateViaApi(video, restTemplate);
+				System.out.println("Live - Channel:[" + video.getChannelId() + "] Video:[" + video.getId() + "] ["
+						+ video.getTitle() + "]");
+			}
+			videoRepository.saveAll(videos);
+
+			break;
+		}
+
+		// 全てのXMLの取得更新 + 新規動画のみAPIでデータ取得
+		case "updateRealTime": {
 			for (ChannelEntity channel : channelRepository.findAll()) {
 				channelService.updateRealTime(channel);
 			}
 			break;
+		}
 
-			// ライブ状態の更新
-		case "updateLiveVideo":
+		// ライブ状態の更新
+		case "updateLiveVideo": {
 			var videos = videoRepository.findLive();
 			for (var video : videos) {
 				VideoSpecification.updateViaApi(video, restTemplate);
-				System.out.println("Live - Channel:[" + video.getChannelId() + "] Video:[" + video.getId() + "] [" + video.getTitle() + "]");
+				System.out.println("Live - Channel:[" + video.getChannelId() + "] Video:[" + video.getId() + "] ["
+						+ video.getTitle() + "]");
 			}
 			videoRepository.saveAll(videos);
 			break;
+		}
 		}
 
 		System.out.println("process-end:" + name);

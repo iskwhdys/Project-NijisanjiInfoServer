@@ -8,8 +8,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface VideoRepository extends JpaRepository<VideoEntity, String> {
 
-    @Query("select o from VideoEntity o where o.channelId = :channelId AND etag is NULL")
-    List<VideoEntity> findNewData(@Param("channelId")String channelId);
+    @Query(value = "select * from public.videos WHERE etag is NULL" , nativeQuery = true)
+    List<VideoEntity> findNewData();
 
     @Query("select o from VideoEntity o where o.channelId = :channelId")
     List<VideoEntity> findChannelId(@Param("channelId")String channelId);
