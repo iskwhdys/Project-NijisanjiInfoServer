@@ -74,6 +74,10 @@ public class VideoEntity {
 	@Column(name = "enabled")
 	private Boolean enabled;
 
+	@Column(name = "type")
+	private String type;
+
+
 }
 
 

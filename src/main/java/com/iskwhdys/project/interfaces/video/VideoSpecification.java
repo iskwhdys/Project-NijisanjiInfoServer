@@ -26,7 +26,6 @@ public class VideoSpecification {
 		}
 	}
 
-
 	public static VideoEntity updateViaApi(VideoEntity entity, RestTemplate restTemplate) {
 		Map<String, String> params = new HashMap<String, String>();
 		params.put("part", "snippet,statistics,contentDetails,liveStreamingDetails");
@@ -79,10 +78,13 @@ public class VideoSpecification {
 			if (liveStreamingDetails.containsKey("actualEndTime"))
 				entity.setLiveEnd(Common.youtubeTimeToDate(liveStreamingDetails.get("actualEndTime").toString()));
 			if (liveStreamingDetails.containsKey("scheduledStartTime"))
-				entity.setLiveSchedule(Common.youtubeTimeToDate(liveStreamingDetails.get("scheduledStartTime").toString()));
+				entity.setLiveSchedule(
+						Common.youtubeTimeToDate(liveStreamingDetails.get("scheduledStartTime").toString()));
 			if (liveStreamingDetails.containsKey("concurrentViewers"))
 				entity.setLiveViews(Integer.parseInt(liveStreamingDetails.get("concurrentViewers").toString()));
 		}
+
+		entity.setType(getType(entity));
 
 		entity.setEnabled(true);
 		return entity;
@@ -90,13 +92,13 @@ public class VideoSpecification {
 	}
 
 	public static int getLikeCount(int count, String strStarAve) {
-		int starAve = Integer.parseInt( strStarAve.replace(".", ""));
+		int starAve = Integer.parseInt(strStarAve.replace(".", ""));
 
 		for (int i = count; i > 0; i--) {
 			double like = Constans.YOUTUBE_LIKE_VALUE * i;
 			double dislike = Constans.YOUTUBE_DISLIKE_VALUE * (count - i);
-			double ave = (like + dislike)  / (double)count;
-			int num = (int)(ave * 100);
+			double ave = (like + dislike) / (double) count;
+			int num = (int) (ave * 100);
 
 			if (num <= starAve) {
 				return i;
@@ -106,6 +108,26 @@ public class VideoSpecification {
 		return 0;
 	}
 
+	public static String getType(VideoEntity video) {
+		if (video.getLiveSchedule() != null && video.getLiveStart() == null && video.getLiveEnd() == null) {
+			return "Reserve";
+		}
+		if (video.getLiveStart() != null && video.getLiveEnd() == null) {
+			return "Live";
+		}
+		return "Upload";
+	}
 
+	public static Boolean isReserve(VideoEntity video) {
+		return video.getType().equals("Reserve");
+	}
+
+	public static Boolean isLive(VideoEntity video) {
+		return video.getType().equals("Live");
+	}
+
+	public static Boolean isUpload(VideoEntity video) {
+		return video.getType().equals("Upload");
+	}
 
 }

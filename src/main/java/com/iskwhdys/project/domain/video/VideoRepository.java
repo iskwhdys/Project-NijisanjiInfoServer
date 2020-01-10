@@ -17,16 +17,24 @@ public interface VideoRepository extends JpaRepository<VideoEntity, String> {
     @Query(value = "select * from public.today_upload_videos o where channel_id = :channelId" , nativeQuery = true)
     List<VideoEntity> findToday(@Param("channelId")String channelId);
 
-    @Query(value = "select * from public.today_upload_videos" , nativeQuery = true)
+    @Query(value = "select * from public.videos "
+    		+ "where type = 'Upload'"
+    		+ " and  enabled = true"
+    		+ " and  (CURRENT_TIMESTAMP - upload_date) < '24:00:00'"
+    		+ " order by upload_date desc" , nativeQuery = true)
     List<VideoEntity> findTodayUpload();
 
     @Query(value = "select * from public.videos "
-    		+ "where live_schedule is not null"
-    		+ " and   live_end is null"
-    		+ " and   views > 0"
+    		+ "where type = 'Live'"
     		+ " and   enabled = true"
+    		+ " and  (CURRENT_TIMESTAMP - upload_date) < '24:00:00'"
     		+ " order by live_start desc" , nativeQuery = true)
     List<VideoEntity> findLive();
+
+
+    @Query(value = "select * from public.videos" , nativeQuery = true)
+    List<VideoEntity> findUploadVideo();
+
 
 
 

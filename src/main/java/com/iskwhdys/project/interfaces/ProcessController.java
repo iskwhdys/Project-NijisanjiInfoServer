@@ -56,23 +56,12 @@ public class ProcessController {
 						+ video.getTitle() + "]");
 				videoRepository.save(video);
 			}
-
 			break;
 		}
 
 		// 定期ジョブ
 		case "update10min": {
-			for (ChannelEntity channel : channelRepository.findAll()) {
-				channelService.updateRealTime(channel);
-			}
-			var videos = videoRepository.findLive();
-			for (var video : videos) {
-				VideoSpecification.updateViaApi(video, restTemplate);
-				System.out.println("Live - Channel:[" + video.getChannelId() + "] Video:[" + video.getId() + "] ["
-						+ video.getTitle() + "]");
-			}
-			videoRepository.saveAll(videos);
-
+			channelService.update10min();
 			break;
 		}
 
@@ -95,6 +84,18 @@ public class ProcessController {
 			videoRepository.saveAll(videos);
 			break;
 		}
+
+		// 不使用：動画情報の更新
+		case "updateVideoType": {
+			var videos = videoRepository.findAll();
+			for (var video : videos) {
+				video.setType(VideoSpecification.getType(video));
+			}
+			videoRepository.saveAll(videos);
+			break;
+
+		}
+
 		}
 
 		System.out.println("process-end:" + name);
