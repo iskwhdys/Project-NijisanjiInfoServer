@@ -34,6 +34,9 @@ public class VideoSpecification {
 	public static VideoEntity updateLiveInfoViaApi(VideoEntity entity, RestTemplate restTemplate) {
 		return updateBaseFunction(entity, restTemplate, "statistics", "liveStreamingDetails");
 	}
+	public static VideoEntity updateLiveToArchiveInfoViaApi(VideoEntity entity, RestTemplate restTemplate) {
+		return updateBaseFunction(entity, restTemplate, "contentDetails");
+	}
 
 	public static VideoEntity updateReserveInfoViaApi(VideoEntity entity, RestTemplate restTemplate) {
 		return updateBaseFunction(entity, restTemplate, "liveStreamingDetails");

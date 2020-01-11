@@ -63,6 +63,10 @@ public class VideoService {
 				VideoFactory.updateViaXmlElement(element, video, true);
 				VideoSpecification.setThumbnail(video, restTemplate);
 				VideoSpecification.updateLiveInfoViaApi(video, restTemplate);
+
+				if(video.isPremierUpload() || video.isLiveArchive()) {
+					VideoSpecification.updateLiveToArchiveInfoViaApi(video, restTemplate);
+				}
 				System.out.println("Live -> " + video.getType() + " " + video.toString());
 
 			} else if (video.isPremierReserve() || video.isLiveReserve()) {
