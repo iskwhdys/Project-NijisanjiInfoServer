@@ -32,4 +32,5 @@ public class ChannelEntity {
 	@Column(name = "thumbnail")
 	private String thumbnail;
 
+	public String toString() { return "Channel:[" + getId() + "] [" + getTitle() + "]"; }
 }
