@@ -142,46 +142,103 @@ public class ChannelService {
 
 			var video = videoRepository.findById(id).orElse(null);
 			if (video == null) {
-
 				video = VideoFactory.createViaXmlElement(element);
 				VideoSpecification.setThumbnail(video, restTemplate);
 				VideoSpecification.updateViaApi(video, restTemplate);
-				System.out.println("New Video:[" + video.getId() + "] [" + video.getTitle() + "]");
+				System.out.println("New -> " + video.getType() + " " + video.toString());
 
-			} else if (VideoSpecification.isUpload(video)) {
+			} else if (video.isUpload() || video.isPremierUpload() || video.isLiveArchive()) {
 
 				VideoFactory.updateViaXmlElement(element, video, false);
 
-			} else if (VideoSpecification.isLive(video)) {
+			} else if (video.isPremierLive() || video.isLiveLive()) {
 
 				VideoFactory.updateViaXmlElement(element, video, true);
 				VideoSpecification.setThumbnail(video, restTemplate);
-				VideoSpecification.updateViaApi(video, restTemplate);
-				System.out.println("Live -> " + video.getType() + " Video:[" + video.getId() + "] [" + video.getTitle() + "]");
+				VideoSpecification.updateLiveInfoViaApi(video, restTemplate);
+				System.out.println("Live -> " + video.getType() + " " + video.toString());
 
-			} else if (VideoSpecification.isReserve(video)) {
+			} else if (video.isPremierReserve() || video.isLiveReserve()) {
 
 				VideoFactory.updateViaXmlElement(element, video, true);
 				VideoSpecification.setThumbnail(video, restTemplate);
 
 				if (video.getLiveSchedule().before(new Date())) {
-					VideoSpecification.updateViaApi(video, restTemplate);
-					System.out.println("Reserve -> " + video.getType() + "  Video:[" + video.getId() + "] [" + video.getTitle() + "]");
+					VideoSpecification.updateReserveInfoViaApi(video, restTemplate);
+					System.out.println("Reserve -> " + video.getType() + " " + video.toString());
 				}
 			}
 			videos.add(video);
 		}));
 
-		// XMLにないライブ情報の更新（非公開系？）
+		// XMLにないライブ情報の更新（非公開系？ライブ完了してホーム(XML)に公開されるまでの動画がここに来た）
 		for (var video : videoRepository.findLive()) {
 			if (videos.stream().anyMatch(v -> v.getId().equals(video.getId()))) {
 				continue; // XMLにあるなら処理しない
 			}
-
 			VideoSpecification.updateViaApi(video, restTemplate);
-			// サムネ更新したいけどXMLがないのでURLが不明（一応動的に生成は出来るけど非公開なら別に更新不要か）
+			// サムネ更新したいけどXMLがないのでURLが不明
+			// 一応動的に生成は出来るけど、ライブの最終的にサムネから変わることもないと思う
+			// TODO:本関数(update10min)が正常に動作しなかったときのための日次関数にはサムネ取得入れたほうがいい
 			videos.add(video);
-			System.out.println("None Video:[" + video.getId() + "] [" + video.getTitle() + "]");
+			System.out.println("None ->" + video.getType() + " " + video.toString());
+		}
+
+		videoRepository.saveAll(videos);
+
+		return videos;
+	}
+
+	public List<VideoEntity> update1day() {
+
+		var videos = new ArrayList<VideoEntity>();
+
+		// 全チャンネルのXMLを取得し、動画情報のElementを作成
+		List<Map<String, Element>> elementMaps = channelRepository.findAll().stream().map(c -> {
+			String url = Constans.FEEDS_URL + "?channel_id=" + c.getId();
+			byte[] bytes = restTemplate.getForObject(url, byte[].class);
+			return bytesToIdElementMap(bytes);
+		}).collect(Collectors.toList());
+
+		// 全動画情報Elementを元にEntityを作成 or 情報の更新
+		elementMaps.stream().forEach(map -> map.entrySet().stream().forEach(entry -> {
+			String id = entry.getKey();
+			Element element = entry.getValue();
+
+			var video = videoRepository.findById(id).orElse(null);
+			if (video == null) {
+				video = VideoFactory.createViaXmlElement(element);
+				VideoSpecification.setThumbnail(video, restTemplate);
+				VideoSpecification.updateViaApi(video, restTemplate);
+				System.out.println("New -> " + video.getType() + " " + video.toString());
+			} else {
+				VideoFactory.updateViaXmlElement(element, video, true);
+				VideoSpecification.setThumbnail(video, restTemplate);
+
+				// API節約で48時間以内にアップされた動画のみ更新
+				int hour48 = 1000 * 60 * 60 * 48;
+				if (video.getLiveStart() != null) {
+					if (new Date().getTime() - video.getLiveStart().getTime() < hour48) {
+						VideoSpecification.updateViaApi(video, restTemplate);
+						System.out.println("Update -> " + video.getType() + " " + video.toString());
+					}
+				} else if (new Date().getTime() - video.getUploadDate().getTime() < hour48) {
+					VideoSpecification.updateViaApi(video, restTemplate);
+					System.out.println("Update -> " + video.getType() + " " + video.toString());
+				}
+			}
+			videos.add(video);
+		}));
+
+		// XMLにないライブ情報の更新（非公開系？ライブ完了してホーム(XML)に公開されるまでの動画がここに来た）
+		for (var video : videoRepository.findLive()) {
+			if (videos.stream().anyMatch(v -> v.getId().equals(video.getId()))) {
+				continue; // XMLにあるなら処理しない
+			}
+			VideoSpecification.updateViaApi(video, restTemplate);
+			// TODO:サムネ取得
+			videos.add(video);
+			System.out.println("None ->" + video.getType() + " " + video.toString());
 		}
 
 		videoRepository.saveAll(videos);

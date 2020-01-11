@@ -11,10 +11,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
 @Data
 @Entity
-@Table(name="videos")
+@Table(name = "videos")
 @NoArgsConstructor
 @AllArgsConstructor
 public class VideoEntity {
@@ -77,8 +76,23 @@ public class VideoEntity {
 	@Column(name = "type")
 	private String type;
 
+	@Column(name = "upload_status")
+	private String uploadStatus;
+
+	public Boolean isUpload() { return getType().equals("Upload"); }
+
+	public Boolean isPremierReserve() { return getType().equals("PremierReserve"); }
+
+	public Boolean isPremierLive() { return getType().equals("PremierLive"); }
+
+	public Boolean isPremierUpload() { return getType().equals("PremierUpload"); }
+
+	public Boolean isLiveReserve() { return getType().equals("LiveReserve"); }
+
+	public Boolean isLiveLive() { return getType().equals("LiveLive"); }
+
+	public Boolean isLiveArchive() { return getType().equals("LiveArchive"); }
+
+	public String toString() { return "Video:[" + getId() + "] [" + getTitle() + "]"; }
 
 }
-
-
-

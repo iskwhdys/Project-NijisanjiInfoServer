@@ -21,16 +21,21 @@ public class ApiController {
 	VideoRepository videoRepository;
 
 	@ResponseBody
-	@RequestMapping(value = "/api/dailyVideos", method = RequestMethod.GET)
-	public List<VideoEntity> getDailyVideos(Model model) {
-		return videoRepository.findTodayUpload() ;
-	}
-
-	@ResponseBody
 	@RequestMapping(value = "/api/liveVideos", method = RequestMethod.GET)
 	public List<VideoEntity> getliveVideos(Model model) {
 		return videoRepository.findLive() ;
 	}
 
+	@ResponseBody
+	@RequestMapping(value = "/api/dailyVideos", method = RequestMethod.GET)
+	public List<VideoEntity> getDailyVideos(Model model) {
+		return videoRepository.find24HourUpload() ;
+	}
+
+	@ResponseBody
+	@RequestMapping(value = "/api/dailyArchives", method = RequestMethod.GET)
+	public List<VideoEntity> getDailyArchives(Model model) {
+		return videoRepository.find24HourArchive() ;
+	}
 
 }

@@ -65,6 +65,12 @@ public class ProcessController {
 			break;
 		}
 
+		// 定期ジョブ
+		case "update1day": {
+			channelService.update1day();
+			break;
+		}
+
 		// 全てのXMLの取得更新 + 新規動画のみAPIでデータ取得
 		case "updateRealTime": {
 			for (ChannelEntity channel : channelRepository.findAll()) {
@@ -85,7 +91,7 @@ public class ProcessController {
 			break;
 		}
 
-		// 不使用：動画情報の更新
+		// メンテナンス用：動画タイプの更新
 		case "updateVideoType": {
 			var videos = videoRepository.findAll();
 			for (var video : videos) {
