@@ -20,19 +20,11 @@ public interface VideoRepository extends JpaRepository<VideoEntity, String> {
     		+ " order by upload_date desc" , nativeQuery = true)
     List<VideoEntity> find24HourUpload();
 
-
     @Query(value = "select * from public.videos "
     		+ "where type = 'LiveArchive'"
     		+ " and  (CURRENT_TIMESTAMP - live_start) < '24:00:00'"
     		+ " and   enabled = true"
     		+ " order by live_start desc" , nativeQuery = true)
     List<VideoEntity> find24HourArchive();
-
-
-
-
-
-
-
 
 }

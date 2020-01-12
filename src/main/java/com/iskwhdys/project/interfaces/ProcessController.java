@@ -47,9 +47,9 @@ public class ProcessController {
 	@Scheduled(cron = "0 45 16 * * *", zone = "Asia/Tokyo")
 	public void cron1day() {
 		System.out.println("cron1day " + new Date());
-
+		channelService.updateAll();
 	}
-	
+
 	@ResponseBody
 	@RequestMapping(value = "/batch", method = RequestMethod.GET)
 	public String batch(@RequestParam("name") String name) {

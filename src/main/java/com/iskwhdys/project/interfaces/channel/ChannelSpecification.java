@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.web.client.RestTemplate;
 
+import com.iskwhdys.project.Common;
 import com.iskwhdys.project.Constans;
 import com.iskwhdys.project.domain.channel.ChannelEntity;
 
@@ -41,7 +42,11 @@ public class ChannelSpecification {
 		try {
 			byte[] buf = restTemplate.getForObject(channel.getThumbnail(), byte[].class);
 			String base64 = Base64.getEncoder().encodeToString(buf);
-			channel.setThumbnail("data:image/jpeg;base64," + base64);
+			channel.setThumbnail(Constans.BASE64_HEADER_IMAGE + base64);
+
+			buf = Common.scaleImage(buf, 30, 30, 1.0f);
+			base64 = Base64.getEncoder().encodeToString(buf);
+			channel.setSmallThumbnail(Constans.BASE64_HEADER_IMAGE + base64);
 		} catch (Exception e) {
 			System.out.println(e);
 			System.out.println(channel.getThumbnail());

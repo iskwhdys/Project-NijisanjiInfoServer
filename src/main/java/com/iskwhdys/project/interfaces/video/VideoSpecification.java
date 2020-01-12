@@ -20,7 +20,7 @@ public class VideoSpecification {
 			byte[] buf = restTemplate.getForObject(entity.getThumbnail(), byte[].class);
 			buf = Common.scaleImage(buf, 176, 132, 0.9f);
 			String base64 = Base64.getEncoder().encodeToString(buf);
-			entity.setThumbnail(Constans.BESE64_IMAGE + base64);
+			entity.setThumbnail(Constans.BASE64_HEADER_IMAGE + base64);
 		} catch (Exception e) {
 			System.out.println(e);
 			System.out.println(entity.getThumbnail());

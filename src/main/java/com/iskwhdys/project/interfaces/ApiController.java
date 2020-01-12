@@ -1,6 +1,7 @@
 package com.iskwhdys.project.interfaces;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.iskwhdys.project.domain.channel.ChannelEntity;
@@ -45,11 +47,12 @@ public class ApiController {
 
 	@ResponseBody
 	@RequestMapping(value = "/api/channel/{id}", method = RequestMethod.GET )
-	public ChannelEntity getChannelThumbnail(@PathVariable("id") String id, Model model) {;
-		return channelRepository.findById(id).get();
-
-//		System.out.println(id);
-//		return id;
+	public ChannelEntity getChannel(@PathVariable("id") String id, @RequestParam Map<String, String> params, Model model) {;
+		if(params.containsKey("MiniThumbnail")) {
+			return channelRepository.findByIdThumbnailMini(id);
+		}else {
+			return channelRepository.findById(id).get();
+		}
 	}
 
 }
