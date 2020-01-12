@@ -18,8 +18,9 @@ public class VideoSpecification {
 
 		try {
 			byte[] buf = restTemplate.getForObject(entity.getThumbnail(), byte[].class);
+			buf = Common.scaleImage(buf, 176, 132, 0.9f);
 			String base64 = Base64.getEncoder().encodeToString(buf);
-			entity.setThumbnail("data:image/jpeg;base64," + base64);
+			entity.setThumbnail(Constans.BESE64_IMAGE + base64);
 		} catch (Exception e) {
 			System.out.println(e);
 			System.out.println(entity.getThumbnail());
@@ -132,7 +133,7 @@ public class VideoSpecification {
 	}
 
 	public static String getType(VideoEntity video) {
-		if (video.getType() == null) {
+		if (video.getType() == null || video.isUnknown()) {
 			// 初回
 			if ("processed".equals(video.getUploadStatus())) {
 				if (video.getLiveSchedule() == null) {
@@ -164,6 +165,7 @@ public class VideoSpecification {
 				if (video.getLiveStart() != null && video.getLiveEnd() == null) return "LiveLive";
 				if (video.getLiveStart() != null && video.getLiveEnd() != null) return "LiveArchive";
 			}
+
 			return video.getType();
 		}
 		return "Unknown";

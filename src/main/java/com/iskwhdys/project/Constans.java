@@ -19,6 +19,8 @@ public final class Constans {
 	public static final int YOUTUBE_LIKE_VALUE = 5;
 	public static final int YOUTUBE_DISLIKE_VALUE = 1;
 
+	public static final String BESE64_IMAGE = "data:image/jpeg;base64,";
+
 
 	static {
 		String key = "";

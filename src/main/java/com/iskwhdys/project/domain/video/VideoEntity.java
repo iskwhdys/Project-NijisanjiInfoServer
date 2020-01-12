@@ -93,6 +93,8 @@ public class VideoEntity {
 
 	public Boolean isLiveArchive() { return getType().equals("LiveArchive"); }
 
+	public Boolean isUnknown() { return getType().equals("Unknown"); }
+
 	public String toString() { return "Video:[" + getId() + "] [" + getTitle() + "]"; }
 
 }

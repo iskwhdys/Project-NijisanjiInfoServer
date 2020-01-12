@@ -80,6 +80,13 @@ public class VideoService {
 					}
 					System.out.println("Reserve -> " + video.getType() + " " + video.toString());
 				}
+			}else if(video.isUnknown()) {
+
+				VideoFactory.updateViaXmlElement(element, video, true);
+				VideoSpecification.setThumbnail(video, restTemplate);
+				VideoSpecification.updateViaApi(video, restTemplate);
+
+				System.out.println("Unknown -> " + video.getType() + " " + video.toString());
 			}
 			videos.add(video);
 		}));
