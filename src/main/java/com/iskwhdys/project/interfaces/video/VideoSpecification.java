@@ -30,14 +30,12 @@ public class VideoSpecification {
 		return updateBaseFunction(entity, restTemplate,
 				"snippet", "statistics", "contentDetails", "liveStreamingDetails", "status");
 	}
-
 	public static VideoEntity updateLiveInfoViaApi(VideoEntity entity, RestTemplate restTemplate) {
-		return updateBaseFunction(entity, restTemplate, "statistics", "liveStreamingDetails");
+		return updateBaseFunction(entity, restTemplate, "liveStreamingDetails");
 	}
 	public static VideoEntity updateLiveToArchiveInfoViaApi(VideoEntity entity, RestTemplate restTemplate) {
 		return updateBaseFunction(entity, restTemplate, "contentDetails");
 	}
-
 	public static VideoEntity updateReserveInfoViaApi(VideoEntity entity, RestTemplate restTemplate) {
 		return updateBaseFunction(entity, restTemplate, "liveStreamingDetails");
 	}

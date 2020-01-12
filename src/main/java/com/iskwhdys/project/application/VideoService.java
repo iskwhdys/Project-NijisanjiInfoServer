@@ -75,6 +75,9 @@ public class VideoService {
 				VideoSpecification.setThumbnail(video, restTemplate);
 				if (video.getLiveSchedule().before(new Date())) {
 					VideoSpecification.updateReserveInfoViaApi(video, restTemplate);
+					if(video.isPremierUpload() || video.isLiveArchive()) {
+						VideoSpecification.updateLiveToArchiveInfoViaApi(video, restTemplate);
+					}
 					System.out.println("Reserve -> " + video.getType() + " " + video.toString());
 				}
 			}
