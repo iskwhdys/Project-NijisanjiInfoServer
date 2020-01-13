@@ -19,16 +19,21 @@ import javax.imageio.stream.ImageOutputStream;
 public class Common {
 
 	public static Date youtubeTimeToDate(String text) {
+
+		String datetime = text.substring(0, 10) + " " + text.substring(11, 19);
+
+		var cal = Calendar.getInstance();
+		cal.setTime(toDate(datetime));
+		cal.add(Calendar.HOUR, Constans.UTC_TIME);
+
+		return cal.getTime();
+	}
+
+	public static Date toDate(String text) {
+
+		var sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		try {
-			String datetime = text.substring(0, 10) + " " + text.substring(11, 19);
-			var sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-			var cal = Calendar.getInstance();
-			cal.setTime(sdf.parse(datetime));
-			cal.add(Calendar.HOUR, Constans.UTC_TIME);
-
-			return cal.getTime();
-
+			return sdf.parse(text);
 		} catch (ParseException e) {
 			System.out.println(e);
 		}

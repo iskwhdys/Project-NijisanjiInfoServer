@@ -64,7 +64,7 @@ public class VideoService {
 				VideoSpecification.setThumbnail(video, restTemplate);
 				VideoSpecification.updateLiveInfoViaApi(video, restTemplate);
 
-				if(video.isPremierUpload() || video.isLiveArchive()) {
+				if (video.isPremierUpload() || video.isLiveArchive()) {
 					VideoSpecification.updateLiveToArchiveInfoViaApi(video, restTemplate);
 				}
 				System.out.println("Live -> " + video.getType() + " " + video.toString());
@@ -73,14 +73,18 @@ public class VideoService {
 
 				VideoFactory.updateViaXmlElement(element, video, true);
 				VideoSpecification.setThumbnail(video, restTemplate);
+
 				if (video.getLiveSchedule().before(new Date())) {
-					VideoSpecification.updateReserveInfoViaApi(video, restTemplate);
-					if(video.isPremierUpload() || video.isLiveArchive()) {
-						VideoSpecification.updateLiveToArchiveInfoViaApi(video, restTemplate);
+					if ((new Date().getTime() - video.getLiveSchedule().getTime()) < 1000 * 60 * 60 * 24) {
+						VideoSpecification.updateReserveInfoViaApi(video, restTemplate);
+
+						if (video.isPremierUpload() || video.isLiveArchive()) {
+							VideoSpecification.updateLiveToArchiveInfoViaApi(video, restTemplate);
+						}
+						System.out.println("Reserve -> " + video.getType() + " " + video.toString());
 					}
-					System.out.println("Reserve -> " + video.getType() + " " + video.toString());
 				}
-			}else if(video.isUnknown()) {
+			} else if (video.isUnknown()) {
 
 				VideoFactory.updateViaXmlElement(element, video, true);
 				VideoSpecification.setThumbnail(video, restTemplate);
@@ -108,6 +112,7 @@ public class VideoService {
 
 		return videos;
 	}
+
 	private Map<String, Element> bytesToIdElementMap(byte[] xmlBytes) {
 
 		var is = new ByteArrayInputStream(xmlBytes);
