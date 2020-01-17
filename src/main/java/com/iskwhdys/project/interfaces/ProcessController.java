@@ -2,6 +2,8 @@ package com.iskwhdys.project.interfaces;
 
 import java.util.Date;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -24,6 +26,8 @@ import com.iskwhdys.project.interfaces.video.VideoSpecification;
 @EnableScheduling
 public class ProcessController {
 
+	Logger logger = LogManager.getLogger(ProcessController.class);
+
 	RestTemplate restTemplate = new RestTemplate();
 
 	@Autowired
@@ -39,21 +43,21 @@ public class ProcessController {
 	 //
 	@Scheduled(cron = "0 */10 * * * *", zone = "Asia/Tokyo")
 	public void cron10min() {
-		System.out.println("cron10min " + new Date());
+		logger.info("cron10min " + new Date());
 		videoService.update10min();
 	}
 
 	//
 	@Scheduled(cron = "0 45 16 * * *", zone = "Asia/Tokyo")
 	public void cron1day() {
-		System.out.println("cron1day " + new Date());
+		logger.info("cron1day " + new Date());
 		channelService.updateAll();
 	}
 
 	@ResponseBody
 	@RequestMapping(value = "/batch", method = RequestMethod.GET)
 	public String batch(@RequestParam("name") String name) {
-		System.out.println("process-start:" + name);
+		logger.info("process-start:" + name);
 
 		switch (name) {
 
@@ -76,34 +80,23 @@ public class ProcessController {
 			}
 			videoRepository.saveAll(videos);
 			break;
-
 		}
 
-		case "resizeVideoThumbnail": {
-//
-//			var videos = videoRepository.findAll();
-//			for (var video : videos) {
-//
-//				if(video.getThumbnail().startsWith(Constans.BESE64_IMAGE) == false) continue;
-//				String base64 = video.getThumbnail().substring(Constans.BESE64_IMAGE.length());
-//				byte[] bytes = Base64.getDecoder().decode(base64);
-//				try {
-//					bytes = Common.scaleImage(bytes, 176, 132, 0.9f);
-//				} catch (IOException e) {
-//					// TODO 自動生成された catch ブロック
-//					e.printStackTrace();
-//				}
-//				base64 = Base64.getEncoder().encodeToString(bytes);
-//				video.setThumbnail(Constans.BESE64_IMAGE + base64);
-//			}
-//			videoRepository.saveAll(videos);
+		case "updateThumbnail": {
+			var videos = videoRepository.findAll();
+			for (var video : videos) {
+				video.setThumbnailUrl("https://i4.ytimg.com/vi/" +  video.getId() +  "/hqdefault.jpg");
+				boolean success = VideoSpecification.setThumbnail(video, restTemplate);
+				video.setEnabled(success);
+			}
+			videoRepository.saveAll(videos);
 			break;
 		}
 
 
 		}
 
-		System.out.println("process-end:" + name);
+		logger.info("process-end:" + name);
 		return "Complate:" + name;
 
 	}

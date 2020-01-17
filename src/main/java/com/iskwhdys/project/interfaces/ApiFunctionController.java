@@ -3,6 +3,8 @@ package com.iskwhdys.project.interfaces;
 import java.util.Base64;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -20,6 +22,8 @@ import org.springframework.web.client.RestTemplate;
 @Controller
 public class ApiFunctionController {
 
+	Logger logger = LogManager.getLogger(ApiFunctionController.class);
+
 	RestTemplate restTemplate = new RestTemplate();
 
 	@RequestMapping(value = "/", method = RequestMethod.GET)
@@ -30,7 +34,7 @@ public class ApiFunctionController {
 	@ResponseBody
 	@RequestMapping(value = "/api/function/base64file", method = RequestMethod.GET)
 	public String getBase64File(@RequestParam Map<String, String> params) {
-		System.out.println(params);
+		logger.info(params);
 
 		byte[] buf = restTemplate.getForObject(params.get("url"), byte[].class);
 
@@ -41,7 +45,7 @@ public class ApiFunctionController {
 
 	@RequestMapping(value = "/api/function/xml", method = RequestMethod.GET)
 	public ResponseEntity<byte[]> getRssXml(@RequestParam Map<String, String> params) {
-		System.out.println(params);
+		logger.info(params);
 
 		byte[] buf = restTemplate.getForObject(params.get("url"), byte[].class);
 
@@ -49,7 +53,7 @@ public class ApiFunctionController {
 		headers.setContentType(MediaType.APPLICATION_RSS_XML);
 
 		var res = new ResponseEntity<>(buf, headers, HttpStatus.OK);
-		System.out.println(res);
+		logger.info(res);
 		return res;
 
 	}

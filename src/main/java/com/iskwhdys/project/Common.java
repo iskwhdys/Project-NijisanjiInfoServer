@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -40,6 +41,33 @@ public class Common {
 		return null;
 	}
 
+	public static byte[] Base64ImageToByte(String base64) {
+		base64 = base64.substring(Constans.BASE64_HEADER_IMAGE.length());
+		return Base64.getDecoder().decode(base64);
+	}
+
+
+	public static byte[] trimImage(final byte[] src, int width, int height, final float quality) throws IOException {
+
+		try (ByteArrayInputStream is = new ByteArrayInputStream(src);
+				ByteArrayOutputStream os = new ByteArrayOutputStream();
+				ImageOutputStream ios = ImageIO.createImageOutputStream(os)) {
+			BufferedImage srcImage = ImageIO.read(is);
+			BufferedImage destImage = trimCenter(srcImage, width, height);
+
+			// 保存品質はユーザー指定に従う
+			ImageWriter writer = ImageIO.getImageWritersByFormatName("jpeg").next();
+			ImageWriteParam param = writer.getDefaultWriteParam();
+			param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+			param.setCompressionQuality(quality);
+			writer.setOutput(ios);
+			writer.write(null, new IIOImage(destImage, null, null), param);
+			writer.dispose();
+
+			return os.toByteArray();
+		}
+	}
+
 	public static byte[] scaleImage(final byte[] src, int width, int height, final float quality) throws IOException {
 
 		try (ByteArrayInputStream is = new ByteArrayInputStream(src);
@@ -67,6 +95,16 @@ public class Common {
 		resizedImage.getGraphics().drawImage(
 				image.getScaledInstance(width, height, Image.SCALE_AREA_AVERAGING),
 				0, 0, width, height, null);
+
+		return resizedImage;
+	}
+	private static BufferedImage trimCenter(final BufferedImage image, int width, int height) throws IOException {
+
+		BufferedImage resizedImage = new BufferedImage(width, height, image.getType());
+		//var img = image.getScaledInstance(width, height, Image.SCALE_AREA_AVERAGING);
+		var img = image.getSubimage(0, (image.getHeight() - height) / 2, width, height);
+
+		resizedImage.getGraphics().drawImage(img, 0, 0, width, height, null);
 
 		return resizedImage;
 	}

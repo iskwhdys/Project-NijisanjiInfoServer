@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jdom2.Element;
 import org.jdom2.input.SAXBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +27,8 @@ import com.iskwhdys.project.interfaces.video.VideoSpecification;
 @Service
 @Transactional
 public class VideoService {
+
+	Logger logger = LogManager.getLogger(VideoService.class);
 
 	@Autowired
 	ChannelRepository channelRepository;
@@ -52,51 +56,52 @@ public class VideoService {
 				video = VideoFactory.createViaXmlElement(element);
 				VideoSpecification.setThumbnail(video, restTemplate);
 				VideoSpecification.updateViaApi(video, restTemplate);
-				System.out.println("New -> " + video.getType() + " " + video.toString());
+				logger.info("New -> " + video.getType() + " " + video.toString());
 
 			} else if (video.isUpload() || video.isPremierUpload() || video.isLiveArchive()) {
 
-				VideoFactory.updateViaXmlElement(element, video, false);
+				VideoFactory.updateViaXmlElement(element, video);
 
 			} else if (video.isPremierLive() || video.isLiveLive()) {
 
-				VideoFactory.updateViaXmlElement(element, video, true);
+				VideoFactory.updateViaXmlElement(element, video);
 				VideoSpecification.setThumbnail(video, restTemplate);
 				VideoSpecification.updateLiveInfoViaApi(video, restTemplate);
 
 				if (video.isPremierUpload() || video.isLiveArchive()) {
 					VideoSpecification.updateLiveToArchiveInfoViaApi(video, restTemplate);
 				}
-				System.out.println("Live -> " + video.getType() + " " + video.toString());
+				logger.info("Live -> " + video.getType() + " " + video.toString());
 
 			} else if (video.isPremierReserve() || video.isLiveReserve()) {
 
-				VideoFactory.updateViaXmlElement(element, video, true);
-				VideoSpecification.setThumbnail(video, restTemplate);
+				VideoFactory.updateViaXmlElement(element, video);
+				Boolean success = VideoSpecification.setThumbnail(video, restTemplate);
+				video.setEnabled(success);
 
-				if (video.getLiveSchedule().before(new Date())) {
+				if (video.getEnabled() && video.getLiveSchedule().before(new Date())) {
 					if ((new Date().getTime() - video.getLiveSchedule().getTime()) < 1000 * 60 * 60 * 24) {
 						VideoSpecification.updateReserveInfoViaApi(video, restTemplate);
 
 						if (video.isPremierUpload() || video.isLiveArchive()) {
 							VideoSpecification.updateLiveToArchiveInfoViaApi(video, restTemplate);
 						}
-						System.out.println("Reserve -> " + video.getType() + " " + video.toString());
+						logger.info("Reserve -> " + video.getType() + " " + video.toString());
 					}
 				}
 			} else if (video.isUnknown()) {
 
-				VideoFactory.updateViaXmlElement(element, video, true);
+				VideoFactory.updateViaXmlElement(element, video);
 				VideoSpecification.setThumbnail(video, restTemplate);
 				VideoSpecification.updateViaApi(video, restTemplate);
 
-				System.out.println("Unknown -> " + video.getType() + " " + video.toString());
+				logger.info("Unknown -> " + video.getType() + " " + video.toString());
 			}
 			videos.add(video);
 		}));
 
 		// XMLにないライブ情報の更新（非公開系？ライブ完了してホーム(XML)に公開されるまでの動画がここに来た）
-		for (var video : videoRepository.findLive()) {
+		for (var video : videoRepository.findByTypeInAndEnabledTrueOrderByLiveStartDesc(List.of("PremierLive", "LiveLive"))) {
 			if (videos.stream().anyMatch(v -> v.getId().equals(video.getId()))) {
 				continue; // XMLにあるなら処理しない
 			}
@@ -105,7 +110,7 @@ public class VideoService {
 			// 一応動的に生成は出来るけど、ライブの最終的にサムネから変わることもないと思う
 			// TODO:本関数(update10min)が正常に動作しなかったときのための日次関数にはサムネ取得入れたほうがいい
 			videos.add(video);
-			System.out.println("None ->" + video.getType() + " " + video.toString());
+			logger.info("None ->" + video.getType() + " " + video.toString());
 		}
 
 		videoRepository.saveAll(videos);
@@ -120,7 +125,7 @@ public class VideoService {
 		try {
 			root = new SAXBuilder().build(is).getRootElement();
 		} catch (Exception e) {
-			System.out.println(e);
+			logger.info(e);
 		}
 
 		var entries = root.getChildren().stream().filter(p -> p.getName().contains("entry"))

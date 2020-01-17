@@ -4,6 +4,8 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.web.client.RestTemplate;
 
 import com.iskwhdys.project.Common;
@@ -11,6 +13,8 @@ import com.iskwhdys.project.Constans;
 import com.iskwhdys.project.domain.channel.ChannelEntity;
 
 public class ChannelSpecification {
+
+	private static Logger logger = LogManager.getLogger(ChannelSpecification.class);
 
 	public static ChannelEntity update(ChannelEntity channel, RestTemplate restTemplate) {
 		return update(channel, restTemplate, "snippet", "statistics");
@@ -48,8 +52,8 @@ public class ChannelSpecification {
 			base64 = Base64.getEncoder().encodeToString(buf);
 			channel.setSmallThumbnail(Constans.BASE64_HEADER_IMAGE + base64);
 		} catch (Exception e) {
-			System.out.println(e);
-			System.out.println(channel.getThumbnail());
+			logger.info(e);
+			logger.info(channel.getThumbnail());
 		}
 	}
 

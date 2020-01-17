@@ -13,10 +13,10 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Entity
-@Table(name = "videos")
+@Table(name = "enabled_videos_without_base64_v")
 @NoArgsConstructor
 @AllArgsConstructor
-public class VideoEntity {
+public class SizeSaveVideoEntity {
 
 	@Id
 	@Column(name = "id")
@@ -90,24 +90,5 @@ public class VideoEntity {
 
 	@Column(name = "update_date")
 	private Date updateDate;
-
-
-	public Boolean isUpload() { return getType().equals("Upload"); }
-
-	public Boolean isPremierReserve() { return getType().equals("PremierReserve"); }
-
-	public Boolean isPremierLive() { return getType().equals("PremierLive"); }
-
-	public Boolean isPremierUpload() { return getType().equals("PremierUpload"); }
-
-	public Boolean isLiveReserve() { return getType().equals("LiveReserve"); }
-
-	public Boolean isLiveLive() { return getType().equals("LiveLive"); }
-
-	public Boolean isLiveArchive() { return getType().equals("LiveArchive"); }
-
-	public Boolean isUnknown() { return getType().equals("Unknown"); }
-
-	public String toString() { return "Video:[" + getId() + "] [" + getTitle() + "]"; }
 
 }

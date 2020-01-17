@@ -1,9 +1,14 @@
 package com.iskwhdys.project.interfaces;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -16,7 +21,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.iskwhdys.project.Common;
 import com.iskwhdys.project.domain.channel.ChannelEntity;
 import com.iskwhdys.project.domain.channel.ChannelRepository;
-import com.iskwhdys.project.domain.video.VideoEntity;
+import com.iskwhdys.project.domain.video.SizeSaveVideoEntity;
+import com.iskwhdys.project.domain.video.SizeSaveVideoRepository;
 import com.iskwhdys.project.domain.video.VideoRepository;
 
 @CrossOrigin
@@ -28,32 +34,52 @@ public class ApiController {
 	@Autowired
 	VideoRepository videoRepository;
 
+	@Autowired
+	SizeSaveVideoRepository ssVideoRepository;
 	@ResponseBody
-	@RequestMapping(value = "/api/liveVideos", method = RequestMethod.GET)
-	public List<VideoEntity> getliveVideos(Model model) { return videoRepository.findLive(); }
+	@RequestMapping(value = "/api/video", method = RequestMethod.GET)
+	public List<SizeSaveVideoEntity> getVideos(
+			@RequestParam("type") String type,
+			@RequestParam("mode") String mode,
+			@RequestParam(name="from", required = false) String from, Model model) {
 
-	@ResponseBody
-	@RequestMapping(value = "/api/dailyVideos", method = RequestMethod.GET)
-	public List<VideoEntity> getDailyVideos(Model model) { return videoRepository.find24HourUpload(); }
+		if ("live".equals(type)) {
+			return ssVideoRepository.findByTypeInOrderByLiveStartDesc(List.of("PremierLive", "LiveLive"));
+		}
+		else if ("upload".equals(type)) {
+			if ("new".equals(mode)) {
+				return ssVideoRepository.findByTypeInAndUploadDateBetweenOrderByUploadDateDesc(
+						List.of("PremierUpload", "Upload"),
+						new Date(new Date().getTime() - (1000 * 60 * 60 * 24 * 2)), new Date()
+						);
+			} else if ("get".equals(mode)) {
+				return ssVideoRepository.findTop10ByTypeInAndUploadDateBeforeOrderByUploadDateDesc(
+					List.of("PremierUpload", "Upload"),
+					Common.toDate(from));
+			}
+		} else if ("archive".equals(type)) {
+			if ("new".equals(mode)) {
+				return ssVideoRepository.findByTypeEqualsAndLiveStartBetweenOrderByLiveStartDesc(
+						"LiveArchive",
+						new Date(new Date().getTime() - (1000 * 60 * 60 * 24 * 1)), new Date()
+						);
+			} else if ("get".equals(mode)) {
+				return ssVideoRepository.findTop30ByTypeEqualsAndLiveStartBeforeOrderByLiveStartDesc(
+						"LiveArchive",
+						Common.toDate(from));
 
-	@ResponseBody
-	@RequestMapping(value = "/api/dailyArchives", method = RequestMethod.GET)
-	public List<VideoEntity> getDailyArchives(Model model) { return videoRepository.find24HourArchive(); }
-
-	@ResponseBody
-	@RequestMapping(value = "/api/uploadVideos", method = RequestMethod.GET)
-	public List<VideoEntity> getUploadVideos(
-			@RequestParam("from") String from,
-			@RequestParam("count") int count, Model model) {
-		return videoRepository.findUpload(Common.toDate(from), count);
+			}
+		}
+		return null;
 	}
 
 	@ResponseBody
-	@RequestMapping(value = "/api/archiveVideos", method = RequestMethod.GET)
-	public List<VideoEntity> getArchiveVideos(
-			@RequestParam("from") String from,
-			@RequestParam("count") int count, Model model) {
-		return videoRepository.findArchive(Common.toDate(from), count);
+	@RequestMapping(value = "/api/video/{id}/thumbnail_mini", method = RequestMethod.GET)
+	public ResponseEntity<byte[]> geThumbnailMini(@PathVariable("id") String id, Model model) {
+		String base64 = videoRepository.findById(id).get().getThumbnailMini();
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.IMAGE_JPEG);
+		return new ResponseEntity<>(Common.Base64ImageToByte(base64), headers, HttpStatus.OK);
 	}
 
 	@ResponseBody

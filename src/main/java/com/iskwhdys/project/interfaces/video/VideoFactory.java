@@ -1,5 +1,7 @@
 package com.iskwhdys.project.interfaces.video;
 
+import java.util.Date;
+
 import org.jdom2.Element;
 
 import com.iskwhdys.project.Common;
@@ -8,11 +10,13 @@ import com.iskwhdys.project.domain.video.VideoEntity;
 public class VideoFactory {
 
 	public static VideoEntity createViaXmlElement(Element entry) {
-		return updateViaXmlElement(entry, new VideoEntity(), true);
-
+		var video = updateViaXmlElement(entry, new VideoEntity());
+		video.setCreateDate(new Date());
+		return video;
 	}
 
-	public static VideoEntity updateViaXmlElement(Element entry, VideoEntity entity, Boolean isUpdateThumbnail) {
+	public static VideoEntity updateViaXmlElement(Element entry, VideoEntity entity) {
+		entity.setUpdateDate(new Date());
 
 		Element group = null;
 		for (Element element : entry.getChildren()) {
@@ -44,9 +48,7 @@ public class VideoFactory {
 				entity.setDescription(element.getValue());
 				break;
 			case "thumbnail":
-				if (isUpdateThumbnail) {
-					entity.setThumbnail(element.getAttributeValue("url"));
-				}
+				entity.setThumbnailUrl(element.getAttributeValue("url"));
 				break;
 			case "community":
 				community = element;

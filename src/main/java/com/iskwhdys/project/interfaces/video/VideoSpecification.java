@@ -6,6 +6,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.web.client.RestTemplate;
 
 import com.iskwhdys.project.Common;
@@ -14,29 +16,42 @@ import com.iskwhdys.project.domain.video.VideoEntity;
 
 public class VideoSpecification {
 
-	public static void setThumbnail(VideoEntity entity, RestTemplate restTemplate) {
+	private static Logger logger = LogManager.getLogger(VideoSpecification.class);
+
+	public static Boolean setThumbnail(VideoEntity entity, RestTemplate restTemplate) {
 
 		try {
-			byte[] buf = restTemplate.getForObject(entity.getThumbnail(), byte[].class);
-			buf = Common.scaleImage(buf, 176, 132, 0.9f);
+			byte[] buf = restTemplate.getForObject(entity.getThumbnailUrl(), byte[].class);
 			String base64 = Base64.getEncoder().encodeToString(buf);
 			entity.setThumbnail(Constans.BASE64_HEADER_IMAGE + base64);
+
+			buf = Common.scaleImage(buf, 176, 132, 1.0f);
+			buf = Common.trimImage(buf, 176, 98, 0.9f);
+			base64 = Base64.getEncoder().encodeToString(buf);
+			entity.setThumbnailMini(Constans.BASE64_HEADER_IMAGE + base64);
+
 		} catch (Exception e) {
-			System.out.println(e);
-			System.out.println(entity.getThumbnail());
+
+			logger.info(e);
+			logger.info(entity.getThumbnailUrl());
+			return false;
 		}
+		return true;
 	}
 
 	public static VideoEntity updateViaApi(VideoEntity entity, RestTemplate restTemplate) {
 		return updateBaseFunction(entity, restTemplate,
 				"snippet", "statistics", "contentDetails", "liveStreamingDetails", "status");
 	}
+
 	public static VideoEntity updateLiveInfoViaApi(VideoEntity entity, RestTemplate restTemplate) {
 		return updateBaseFunction(entity, restTemplate, "liveStreamingDetails");
 	}
+
 	public static VideoEntity updateLiveToArchiveInfoViaApi(VideoEntity entity, RestTemplate restTemplate) {
 		return updateBaseFunction(entity, restTemplate, "contentDetails");
 	}
+
 	public static VideoEntity updateReserveInfoViaApi(VideoEntity entity, RestTemplate restTemplate) {
 		return updateBaseFunction(entity, restTemplate, "liveStreamingDetails");
 	}
@@ -56,11 +71,11 @@ public class VideoSpecification {
 		entity.setEtag(item.get("etag").toString());
 		for (String part : parts) {
 			var map = (Map<String, ?>) item.get(part);
-				 if (part.equals("snippet")) 				setSnippet(entity, map);
-			else if (part.equals("statistics")) 			setStatistics(entity, map);
-			else if (part.equals("contentDetails")) 		setContentDetails(entity, map);
-			else if (part.equals("liveStreamingDetails")) 	setLiveStreamingDetails(entity, map);
-			else if (part.equals("status")) 				setStatus(entity, map);
+			if (part.equals("snippet")) setSnippet(entity, map);
+			else if (part.equals("statistics")) setStatistics(entity, map);
+			else if (part.equals("contentDetails")) setContentDetails(entity, map);
+			else if (part.equals("liveStreamingDetails")) setLiveStreamingDetails(entity, map);
+			else if (part.equals("status")) setStatus(entity, map);
 		}
 		entity.setType(getType(entity));
 		entity.setEnabled(true);
@@ -70,18 +85,18 @@ public class VideoSpecification {
 
 	private static VideoEntity setSnippet(VideoEntity video, Map<String, ?> map) {
 		if (map == null) return video;
-		if (map.containsKey("title"))		video.setTitle(map.get("title").toString());
-		if (map.containsKey("description"))	video.setDescription(map.get("description").toString());
+		if (map.containsKey("title")) video.setTitle(map.get("title").toString());
+		if (map.containsKey("description")) video.setDescription(map.get("description").toString());
 		return video;
 	}
 
 	private static VideoEntity setStatistics(VideoEntity video, Map<String, ?> map) {
 		if (map == null) return video;
-		if (map.containsKey("viewCount"))		video.setViews(toInteger(map, "viewCount"));
-		if (map.containsKey("likeCount"))		video.setLikes(toInteger(map, "likeCount"));
-		if (map.containsKey("dislikeCount"))	video.setDislikes(toInteger(map, "dislikeCount"));
-		if (map.containsKey("favoriteCount"))	video.setFavorites(toInteger(map, "favoriteCount"));
-		if (map.containsKey("commentCount"))	video.setComments(toInteger(map, "commentCount"));
+		if (map.containsKey("viewCount")) video.setViews(toInteger(map, "viewCount"));
+		if (map.containsKey("likeCount")) video.setLikes(toInteger(map, "likeCount"));
+		if (map.containsKey("dislikeCount")) video.setDislikes(toInteger(map, "dislikeCount"));
+		if (map.containsKey("favoriteCount")) video.setFavorites(toInteger(map, "favoriteCount"));
+		if (map.containsKey("commentCount")) video.setComments(toInteger(map, "commentCount"));
 		return video;
 	}
 
@@ -94,16 +109,16 @@ public class VideoSpecification {
 
 	private static VideoEntity setLiveStreamingDetails(VideoEntity video, Map<String, ?> map) {
 		if (map == null) return video;
-		if (map.containsKey("actualStartTime")) 	video.setLiveStart(toDate(map, "actualStartTime"));
-		if (map.containsKey("actualEndTime")) 		video.setLiveEnd(toDate(map, "actualEndTime"));
-		if (map.containsKey("scheduledStartTime")) 	video.setLiveSchedule(toDate(map, "scheduledStartTime"));
-		if (map.containsKey("concurrentViewers")) 	video.setLiveViews(toInteger(map, "concurrentViewers"));
+		if (map.containsKey("actualStartTime")) video.setLiveStart(toDate(map, "actualStartTime"));
+		if (map.containsKey("actualEndTime")) video.setLiveEnd(toDate(map, "actualEndTime"));
+		if (map.containsKey("scheduledStartTime")) video.setLiveSchedule(toDate(map, "scheduledStartTime"));
+		if (map.containsKey("concurrentViewers")) video.setLiveViews(toInteger(map, "concurrentViewers"));
 		return video;
 	}
 
 	private static VideoEntity setStatus(VideoEntity video, Map<String, ?> map) {
 		if (map == null) return video;
-		if (map.containsKey("uploadStatus"))		video.setUploadStatus(map.get("uploadStatus").toString());
+		if (map.containsKey("uploadStatus")) video.setUploadStatus(map.get("uploadStatus").toString());
 		return video;
 	}
 
@@ -145,13 +160,9 @@ public class VideoSpecification {
 				}
 			}
 			if ("uploaded".equals(video.getUploadStatus())) {
-				if (video.getLiveSchedule() == null) {
-					return "LiveNoSchedule"; // どういう状況？
-				} else {
-					if (video.getLiveStart() == null && video.getLiveEnd() == null) return "LiveReserve";
-					if (video.getLiveStart() != null && video.getLiveEnd() == null) return "LiveLive";
-					if (video.getLiveStart() != null && video.getLiveEnd() != null) return "LiveArchive";
-				}
+				if (video.getLiveStart() == null && video.getLiveEnd() == null) return "LiveReserve";
+				if (video.getLiveStart() != null && video.getLiveEnd() == null) return "LiveLive";
+				if (video.getLiveStart() != null && video.getLiveEnd() != null) return "LiveArchive";
 			}
 		} else {
 			// 2回目以降
