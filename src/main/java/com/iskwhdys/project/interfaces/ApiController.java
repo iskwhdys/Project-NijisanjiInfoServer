@@ -2,7 +2,6 @@ package com.iskwhdys.project.interfaces;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -19,10 +18,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.iskwhdys.project.Common;
-import com.iskwhdys.project.domain.channel.ChannelEntity;
 import com.iskwhdys.project.domain.channel.ChannelRepository;
 import com.iskwhdys.project.domain.video.SizeSaveVideoEntity;
 import com.iskwhdys.project.domain.video.SizeSaveVideoRepository;
+import com.iskwhdys.project.domain.video.VideoEntity;
 import com.iskwhdys.project.domain.video.VideoRepository;
 
 @CrossOrigin
@@ -30,42 +29,38 @@ import com.iskwhdys.project.domain.video.VideoRepository;
 public class ApiController {
 
 	@Autowired
-	ChannelRepository channelRepository;
+	ChannelRepository cr;
 	@Autowired
-	VideoRepository videoRepository;
+	VideoRepository vr;
+	@Autowired
+	SizeSaveVideoRepository ssvr;
 
-	@Autowired
-	SizeSaveVideoRepository ssVideoRepository;
 	@ResponseBody
 	@RequestMapping(value = "/api/video", method = RequestMethod.GET)
 	public List<SizeSaveVideoEntity> getVideos(
 			@RequestParam("type") String type,
 			@RequestParam("mode") String mode,
-			@RequestParam(name="from", required = false) String from, Model model) {
+			@RequestParam(name = "from", required = false) String from, Model model) {
 
 		if ("live".equals(type)) {
-			return ssVideoRepository.findByTypeInOrderByLiveStartDesc(List.of("PremierLive", "LiveLive"));
-		}
-		else if ("upload".equals(type)) {
+			return ssvr.findByTypeInOrderByLiveStartDesc(VideoEntity.TYPE_LIVES);
+		} else if ("upload".equals(type)) {
 			if ("new".equals(mode)) {
-				return ssVideoRepository.findByTypeInAndUploadDateBetweenOrderByUploadDateDesc(
-						List.of("PremierUpload", "Upload"),
-						new Date(new Date().getTime() - (1000 * 60 * 60 * 24 * 2)), new Date()
-						);
+				return ssvr.findByTypeInAndUploadDateBetweenOrderByUploadDateDesc(VideoEntity.TYPE_UPLOADS,
+						new Date(new Date().getTime() - (1000 * 60 * 60 * 24 * 2)), new Date());
 			} else if ("get".equals(mode)) {
-				return ssVideoRepository.findTop10ByTypeInAndUploadDateBeforeOrderByUploadDateDesc(
-					List.of("PremierUpload", "Upload"),
-					Common.toDate(from));
+				return ssvr.findTop10ByTypeInAndUploadDateBeforeOrderByUploadDateDesc(
+						VideoEntity.TYPE_UPLOADS,
+						Common.toDate(from));
 			}
 		} else if ("archive".equals(type)) {
 			if ("new".equals(mode)) {
-				return ssVideoRepository.findByTypeEqualsAndLiveStartBetweenOrderByLiveStartDesc(
-						"LiveArchive",
-						new Date(new Date().getTime() - (1000 * 60 * 60 * 24 * 1)), new Date()
-						);
+				return ssvr.findByTypeEqualsAndLiveStartBetweenOrderByLiveStartDesc(
+						VideoEntity.TYPE_LIVE_ARCHIVE,
+						new Date(new Date().getTime() - (1000 * 60 * 60 * 24 * 1)), new Date());
 			} else if ("get".equals(mode)) {
-				return ssVideoRepository.findTop30ByTypeEqualsAndLiveStartBeforeOrderByLiveStartDesc(
-						"LiveArchive",
+				return ssvr.findTop30ByTypeEqualsAndLiveStartBeforeOrderByLiveStartDesc(
+						VideoEntity.TYPE_LIVE_ARCHIVE,
 						Common.toDate(from));
 
 			}
@@ -76,21 +71,19 @@ public class ApiController {
 	@ResponseBody
 	@RequestMapping(value = "/api/video/{id}/thumbnail_mini", method = RequestMethod.GET)
 	public ResponseEntity<byte[]> geThumbnailMini(@PathVariable("id") String id, Model model) {
-		String base64 = videoRepository.findById(id).get().getThumbnailMini();
+		String base64 = vr.findByIdThumbnailMini(id);
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.IMAGE_JPEG);
 		return new ResponseEntity<>(Common.Base64ImageToByte(base64), headers, HttpStatus.OK);
 	}
 
 	@ResponseBody
-	@RequestMapping(value = "/api/channel/{id}", method = RequestMethod.GET)
-	public ChannelEntity getChannel(
-			@PathVariable("id") String id,
-			@RequestParam Map<String, String> params, Model model) {
-		if (params.containsKey("MiniThumbnail")) {
-			return channelRepository.findByIdThumbnailMini(id);
-		} else {
-			return channelRepository.findById(id).get();
-		}
+	@RequestMapping(value = "/api/channel/{id}/thumbnail_mini", method = RequestMethod.GET)
+	public ResponseEntity<byte[]> getChannelThumbnailMini(@PathVariable("id") String id, Model model) {
+		String base64 = cr.findByIdThumbnailMini(id);
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.IMAGE_JPEG);
+		return new ResponseEntity<>(Common.Base64ImageToByte(base64), headers, HttpStatus.OK);
+
 	}
 }

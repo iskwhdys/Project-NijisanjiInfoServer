@@ -1,6 +1,7 @@
 package com.iskwhdys.project.domain.video;
 
 import java.util.Date;
+import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -91,22 +92,33 @@ public class VideoEntity {
 	@Column(name = "update_date")
 	private Date updateDate;
 
+	public static final String TYPE_UPLOAD = "Upload";
+	public static final String TYPE_PREMIER_RESERVE = "PremierReserve";
+	public static final String TYPE_PREMIER_LIVE = "PremierLive";
+	public static final String TYPE_PREMIER_UPLOAD = "PremierUpload";
+	public static final String TYPE_LIVE_RESERVE = "LiveReserve";
+	public static final String TYPE_LIVE_LIVE = "LiveLive";
+	public static final String TYPE_LIVE_ARCHIVE = "LiveArchive";
+	public static final String TYPE_UNKNOWN = "Unknown";
 
-	public Boolean isUpload() { return getType().equals("Upload"); }
+	public static final List<String> TYPE_UPLOADS = List.of(TYPE_PREMIER_UPLOAD, TYPE_UPLOAD);
+	public static final List<String> TYPE_LIVES = List.of(TYPE_PREMIER_LIVE, TYPE_LIVE_LIVE);
 
-	public Boolean isPremierReserve() { return getType().equals("PremierReserve"); }
+	public Boolean isUpload() { return getType().equals(TYPE_UPLOAD); }
 
-	public Boolean isPremierLive() { return getType().equals("PremierLive"); }
+	public Boolean isPremierReserve() { return getType().equals(TYPE_PREMIER_RESERVE); }
 
-	public Boolean isPremierUpload() { return getType().equals("PremierUpload"); }
+	public Boolean isPremierLive() { return getType().equals(TYPE_PREMIER_LIVE); }
 
-	public Boolean isLiveReserve() { return getType().equals("LiveReserve"); }
+	public Boolean isPremierUpload() { return getType().equals(TYPE_PREMIER_UPLOAD); }
 
-	public Boolean isLiveLive() { return getType().equals("LiveLive"); }
+	public Boolean isLiveReserve() { return getType().equals(TYPE_LIVE_RESERVE); }
 
-	public Boolean isLiveArchive() { return getType().equals("LiveArchive"); }
+	public Boolean isLiveLive() { return getType().equals(TYPE_LIVE_LIVE); }
 
-	public Boolean isUnknown() { return getType().equals("Unknown"); }
+	public Boolean isLiveArchive() { return getType().equals(TYPE_LIVE_ARCHIVE); }
+
+	public Boolean isUnknown() { return getType().equals(TYPE_UNKNOWN); }
 
 	public String toString() { return "Video:[" + getId() + "] [" + getTitle() + "]"; }
 

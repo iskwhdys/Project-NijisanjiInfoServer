@@ -5,8 +5,8 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface ChannelRepository extends JpaRepository<ChannelEntity, String> {
 
-    @Query(value = "select id, title, description, subscriber_count, small_thumbnail as thumbnail, null as small_thumbnail from public.channels where id = ?1" , nativeQuery = true)
-    ChannelEntity findByIdThumbnailMini(String id);
+    @Query(value = "select small_thumbnail from public.channels where id = ?1" , nativeQuery = true)
+    String findByIdThumbnailMini(String id);
 
 
 }

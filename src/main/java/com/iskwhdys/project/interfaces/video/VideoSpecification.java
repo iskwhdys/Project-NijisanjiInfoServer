@@ -152,33 +152,33 @@ public class VideoSpecification {
 			// 初回
 			if ("processed".equals(video.getUploadStatus())) {
 				if (video.getLiveSchedule() == null) {
-					return "Upload";
+					return VideoEntity.TYPE_UPLOAD;
 				} else {
-					if (video.getLiveStart() == null && video.getLiveEnd() == null) return "PremierReserve";
-					if (video.getLiveStart() != null && video.getLiveEnd() == null) return "PremierLive";
-					if (video.getLiveStart() != null && video.getLiveEnd() != null) return "PremierUpload";
+					if (video.getLiveStart() == null && video.getLiveEnd() == null) return VideoEntity.TYPE_PREMIER_RESERVE;
+					if (video.getLiveStart() != null && video.getLiveEnd() == null) return VideoEntity.TYPE_PREMIER_LIVE;
+					if (video.getLiveStart() != null && video.getLiveEnd() != null) return VideoEntity.TYPE_PREMIER_UPLOAD;
 				}
 			}
 			if ("uploaded".equals(video.getUploadStatus())) {
-				if (video.getLiveStart() == null && video.getLiveEnd() == null) return "LiveReserve";
-				if (video.getLiveStart() != null && video.getLiveEnd() == null) return "LiveLive";
-				if (video.getLiveStart() != null && video.getLiveEnd() != null) return "LiveArchive";
+				if (video.getLiveStart() == null && video.getLiveEnd() == null) return VideoEntity.TYPE_LIVE_RESERVE;
+				if (video.getLiveStart() != null && video.getLiveEnd() == null) return VideoEntity.TYPE_LIVE_LIVE;
+				if (video.getLiveStart() != null && video.getLiveEnd() != null) return VideoEntity.TYPE_LIVE_ARCHIVE;
 			}
 		} else {
 			// 2回目以降
 			if (video.getType().startsWith("Premier")) {
-				if (video.getLiveStart() == null && video.getLiveEnd() == null) return "PremierReserve";
-				if (video.getLiveStart() != null && video.getLiveEnd() == null) return "PremierLive";
-				if (video.getLiveStart() != null && video.getLiveEnd() != null) return "PremierUpload";
+				if (video.getLiveStart() == null && video.getLiveEnd() == null) return VideoEntity.TYPE_PREMIER_RESERVE;
+				if (video.getLiveStart() != null && video.getLiveEnd() == null) return VideoEntity.TYPE_PREMIER_LIVE;
+				if (video.getLiveStart() != null && video.getLiveEnd() != null) return VideoEntity.TYPE_PREMIER_UPLOAD;
 			}
 			if (video.getType().startsWith("Live")) {
-				if (video.getLiveStart() == null && video.getLiveEnd() == null) return "LiveReserve";
-				if (video.getLiveStart() != null && video.getLiveEnd() == null) return "LiveLive";
-				if (video.getLiveStart() != null && video.getLiveEnd() != null) return "LiveArchive";
+				if (video.getLiveStart() == null && video.getLiveEnd() == null) return VideoEntity.TYPE_LIVE_RESERVE;
+				if (video.getLiveStart() != null && video.getLiveEnd() == null) return VideoEntity.TYPE_LIVE_LIVE;
+				if (video.getLiveStart() != null && video.getLiveEnd() != null) return VideoEntity.TYPE_LIVE_ARCHIVE;
 			}
 
 			return video.getType();
 		}
-		return "Unknown";
+		return VideoEntity.TYPE_UNKNOWN;
 	}
 }
