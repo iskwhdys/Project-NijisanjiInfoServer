@@ -19,8 +19,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.iskwhdys.project.Common;
 import com.iskwhdys.project.domain.channel.ChannelRepository;
-import com.iskwhdys.project.domain.video.SizeSaveVideoEntity;
-import com.iskwhdys.project.domain.video.SizeSaveVideoRepository;
+import com.iskwhdys.project.domain.video.VideoCardEntity;
+import com.iskwhdys.project.domain.video.VideoCardRepository;
 import com.iskwhdys.project.domain.video.VideoEntity;
 import com.iskwhdys.project.domain.video.VideoRepository;
 
@@ -33,33 +33,33 @@ public class ApiController {
 	@Autowired
 	VideoRepository vr;
 	@Autowired
-	SizeSaveVideoRepository ssvr;
+	VideoCardRepository vcr;
 
 	@ResponseBody
 	@RequestMapping(value = "/api/video", method = RequestMethod.GET)
-	public List<SizeSaveVideoEntity> getVideos(
+	public List<VideoCardEntity> getVideos(
 			@RequestParam("type") String type,
 			@RequestParam("mode") String mode,
 			@RequestParam(name = "from", required = false) String from, Model model) {
 
 		if ("live".equals(type)) {
-			return ssvr.findByTypeInOrderByLiveStartDesc(VideoEntity.TYPE_LIVES);
+			return vcr.findByTypeInOrderByLiveStartDesc(VideoEntity.TYPE_LIVES);
 		} else if ("upload".equals(type)) {
 			if ("new".equals(mode)) {
-				return ssvr.findByTypeInAndUploadDateBetweenOrderByUploadDateDesc(VideoEntity.TYPE_UPLOADS,
+				return vcr.findByTypeInAndUploadDateBetweenOrderByUploadDateDesc(VideoEntity.TYPE_UPLOADS,
 						new Date(new Date().getTime() - (1000 * 60 * 60 * 24 * 2)), new Date());
 			} else if ("get".equals(mode)) {
-				return ssvr.findTop10ByTypeInAndUploadDateBeforeOrderByUploadDateDesc(
+				return vcr.findTop10ByTypeInAndUploadDateBeforeOrderByUploadDateDesc(
 						VideoEntity.TYPE_UPLOADS,
 						Common.toDate(from));
 			}
 		} else if ("archive".equals(type)) {
 			if ("new".equals(mode)) {
-				return ssvr.findByTypeEqualsAndLiveStartBetweenOrderByLiveStartDesc(
+				return vcr.findByTypeEqualsAndLiveStartBetweenOrderByLiveStartDesc(
 						VideoEntity.TYPE_LIVE_ARCHIVE,
 						new Date(new Date().getTime() - (1000 * 60 * 60 * 24 * 1)), new Date());
 			} else if ("get".equals(mode)) {
-				return ssvr.findTop30ByTypeEqualsAndLiveStartBeforeOrderByLiveStartDesc(
+				return vcr.findTop30ByTypeEqualsAndLiveStartBeforeOrderByLiveStartDesc(
 						VideoEntity.TYPE_LIVE_ARCHIVE,
 						Common.toDate(from));
 

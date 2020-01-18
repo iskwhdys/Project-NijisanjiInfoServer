@@ -60,9 +60,7 @@ public class VideoService {
 			videos.add(video);
 			logger.info("None ->" + video.getType() + " " + video.toString());
 		}
-
 		vr.saveAll(videos);
-
 		return videos;
 	}
 
@@ -91,7 +89,9 @@ public class VideoService {
 			VideoFactory.updateViaXmlElement(element, video);
 			if ((new Date().getTime() - video.getUploadDate().getTime()) < 1000 * 60 * 60 * 24) {
 				// 公開して24時間以内の動画はサムネイルを更新する
-				video.setEnabled(VideoSpecification.setThumbnail(video, restTemplate));
+				var success = VideoSpecification.setThumbnail(video, restTemplate);
+				// サムネ更新が出来ない == 動画が非公開
+				video.setEnabled(success);
 				logger.debug("XML Thumbnail -> " + video.getType() + " " + video.toString());
 			}
 
@@ -100,7 +100,9 @@ public class VideoService {
 			VideoFactory.updateViaXmlElement(element, video);
 			if ((new Date().getTime() - video.getLiveStart().getTime()) < 1000 * 60 * 60 * 24) {
 				// 配信して24時間以内の動画はサムネイルを更新する
-				video.setEnabled(VideoSpecification.setThumbnail(video, restTemplate));
+				var success = VideoSpecification.setThumbnail(video, restTemplate);
+				// サムネ更新が出来ない == 動画が非公開
+				video.setEnabled(success);
 				logger.debug("XML Thumbnail -> " + video.getType() + " " + video.toString());
 			}
 
