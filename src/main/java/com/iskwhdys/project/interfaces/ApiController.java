@@ -62,9 +62,29 @@ public class ApiController {
 				return vcr.findTop30ByTypeEqualsAndLiveStartBeforeOrderByLiveStartDesc(
 						VideoEntity.TYPE_LIVE_ARCHIVE,
 						Common.toDate(from));
-
+			}
+		} else if ("premier".equals(type)) {
+			if ("new".equals(mode)) {
+				return vcr.findByTypeEqualsAndLiveScheduleBetweenOrderByLiveSchedule(
+						VideoEntity.TYPE_PREMIER_RESERVE,
+						new Date(new Date().getTime() - (1000 * 60 * 60 * 24 * 1)), new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 2)));
+			} else if ("get".equals(mode)) {
+				return vcr.findTop10ByTypeEqualsAndLiveScheduleBeforeOrderByLiveSchedule(
+						VideoEntity.TYPE_PREMIER_RESERVE,
+						Common.toDate(from));
+			}
+		}else if ("schedule".equals(type)) {
+			if ("new".equals(mode)) {
+				return vcr.findByTypeEqualsAndLiveScheduleBetweenOrderByLiveSchedule(
+						VideoEntity.TYPE_LIVE_RESERVE,
+						new Date(new Date().getTime() - (1000 * 60 * 60 * 24 * 1)), new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 2)));
+			} else if ("get".equals(mode)) {
+				return vcr.findTop30ByTypeEqualsAndLiveScheduleAfterOrderByLiveSchedule(
+						VideoEntity.TYPE_LIVE_RESERVE,
+						Common.toDate(from));
 			}
 		}
+
 		return null;
 	}
 

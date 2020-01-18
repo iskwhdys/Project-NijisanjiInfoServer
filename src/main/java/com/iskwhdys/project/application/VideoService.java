@@ -123,7 +123,7 @@ public class VideoService {
 			Boolean success = VideoSpecification.setThumbnail(video, restTemplate);
 			video.setEnabled(success);
 
-			if (video.getEnabled() && video.getLiveSchedule().before(new Date())) {
+			if (video.getEnabled() && (video.getLiveSchedule().before(new Date()) || video.getViews() > 0)) {
 				// 配信予定日時を過ぎた動画を対象
 				if ((new Date().getTime() - video.getLiveSchedule().getTime()) < 1000 * 60 * 60 * 24) {
 					// 配信予定時間から24時間経過していない動画のみAPIを使用する

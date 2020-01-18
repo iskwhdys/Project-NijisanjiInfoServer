@@ -101,6 +101,7 @@ public class VideoEntity {
 	public static final String TYPE_LIVE_ARCHIVE = "LiveArchive";
 	public static final String TYPE_UNKNOWN = "Unknown";
 
+	public static final List<String> TYPE_RESERVES = List.of(TYPE_PREMIER_RESERVE, TYPE_LIVE_RESERVE);
 	public static final List<String> TYPE_UPLOADS = List.of(TYPE_PREMIER_UPLOAD, TYPE_UPLOAD);
 	public static final List<String> TYPE_LIVES = List.of(TYPE_PREMIER_LIVE, TYPE_LIVE_LIVE);
 

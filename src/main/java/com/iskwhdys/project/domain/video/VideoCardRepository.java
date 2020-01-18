@@ -14,9 +14,17 @@ public interface VideoCardRepository extends JpaRepository<VideoCardEntity, Stri
 
 	List<VideoCardEntity> findTop10ByTypeInAndUploadDateBeforeOrderByUploadDateDesc(List<String> of, Date from);
 
+
 	List<VideoCardEntity> findByTypeEqualsAndLiveStartBetweenOrderByLiveStartDesc(String of, Date start, Date end);
 
 	List<VideoCardEntity> findTop30ByTypeEqualsAndLiveStartBeforeOrderByLiveStartDesc(String of, Date from);
+
+
+	List<VideoCardEntity> findByTypeEqualsAndLiveScheduleBetweenOrderByLiveSchedule(String  of, Date start, Date end);
+
+	List<VideoCardEntity> findTop10ByTypeEqualsAndLiveScheduleBeforeOrderByLiveSchedule(String of, Date from);
+	List<VideoCardEntity> findTop30ByTypeEqualsAndLiveScheduleAfterOrderByLiveSchedule(String of, Date from);
+
 
 
 }
