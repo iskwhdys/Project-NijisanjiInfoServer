@@ -22,9 +22,9 @@ public interface VideoCardRepository extends JpaRepository<VideoCardEntity, Stri
 
 	List<VideoCardEntity> findByTypeEqualsAndLiveScheduleBetweenOrderByLiveSchedule(String  of, Date start, Date end);
 
-	List<VideoCardEntity> findTop10ByTypeEqualsAndLiveScheduleBeforeOrderByLiveSchedule(String of, Date from);
+	List<VideoCardEntity> findTop10ByTypeEqualsAndLiveScheduleAfterOrderByLiveSchedule(String of, Date from);
 	List<VideoCardEntity> findTop30ByTypeEqualsAndLiveScheduleAfterOrderByLiveSchedule(String of, Date from);
 
 
-
+	List<VideoCardEntity> findTop10ByChannelIdEqualsAndUploadDateBeforeOrderByUploadDateDesc(String of, Date from);
 }
