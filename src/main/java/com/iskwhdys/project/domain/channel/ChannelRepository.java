@@ -16,5 +16,8 @@ public interface ChannelRepository extends JpaRepository<ChannelEntity, String> 
     @Query(value = "select id, title, description, subscriber_count, null as thumbnail, null as small_thumbnail from public.channels" , nativeQuery = true)
     List<ChannelEntity> findAllWithoutThumbnail();
 
+    @Query(value = "select id, title, description, subscriber_count, null as thumbnail, null as small_thumbnail from public.channels where id = ?1" , nativeQuery = true)
+    ChannelEntity findByIdWithoutThumbnail(String id);
+
 
 }

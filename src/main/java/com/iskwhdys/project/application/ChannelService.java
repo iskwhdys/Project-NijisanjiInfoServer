@@ -36,7 +36,6 @@ public class ChannelService {
 	public List<ChannelEntity> updateAll() {
 		var channels = channelRepository.findAll();
 		for (var channel : channels) {
-			System.out.println(channel.toString());
 			ChannelSpecification.update(channel, restTemplate);
 			channelRepository.save(channel);
 		}

@@ -90,7 +90,6 @@ public class ApiController {
 						Common.toDate(from));
 			}
 		} else if ("channel_video".equals(type)) {
-			System.out.println(channelId);
 			return vcr.findTop10ByChannelIdEqualsAndUploadDateBeforeOrderByUploadDateDesc(channelId, new Date());
 		}
 
@@ -129,6 +128,12 @@ public class ApiController {
 	@RequestMapping(value = "/api/channel", method = RequestMethod.GET)
 	public List<ChannelEntity> getChannels(Model model) {
 		return cr.findAllWithoutThumbnail();
+
+	}
+	@ResponseBody
+	@RequestMapping(value = "/api/channel/{id}", method = RequestMethod.GET)
+	public ChannelEntity getChannels(@PathVariable("id") String id, Model model) {
+		return cr.findByIdWithoutThumbnail(id);
 
 	}
 }
