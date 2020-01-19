@@ -105,21 +105,21 @@ public class VideoEntity {
 	public static final List<String> TYPE_UPLOADS = List.of(TYPE_PREMIER_UPLOAD, TYPE_UPLOAD);
 	public static final List<String> TYPE_LIVES = List.of(TYPE_PREMIER_LIVE, TYPE_LIVE_LIVE);
 
-	public Boolean isUpload() { return getType().equals(TYPE_UPLOAD); }
+	public Boolean isUpload() { return TYPE_UPLOAD.equals(getType()); }
 
-	public Boolean isPremierReserve() { return getType().equals(TYPE_PREMIER_RESERVE); }
+	public Boolean isPremierReserve() { return TYPE_PREMIER_RESERVE.equals(getType()); }
 
-	public Boolean isPremierLive() { return getType().equals(TYPE_PREMIER_LIVE); }
+	public Boolean isPremierLive() { return TYPE_PREMIER_LIVE.equals(getType()); }
 
-	public Boolean isPremierUpload() { return getType().equals(TYPE_PREMIER_UPLOAD); }
+	public Boolean isPremierUpload() { return TYPE_PREMIER_UPLOAD.equals(getType()); }
 
-	public Boolean isLiveReserve() { return getType().equals(TYPE_LIVE_RESERVE); }
+	public Boolean isLiveReserve() { return TYPE_LIVE_RESERVE.equals(getType()); }
 
-	public Boolean isLiveLive() { return getType().equals(TYPE_LIVE_LIVE); }
+	public Boolean isLiveLive() { return TYPE_LIVE_LIVE.equals(getType()); }
 
-	public Boolean isLiveArchive() { return getType().equals(TYPE_LIVE_ARCHIVE); }
+	public Boolean isLiveArchive() { return TYPE_LIVE_ARCHIVE.equals(getType()); }
 
-	public Boolean isUnknown() { return getType().equals(TYPE_UNKNOWN); }
+	public Boolean isUnknown() { return TYPE_UNKNOWN.equals(getType()); }
 
 	public String toString() { return "Video:[" + getId() + "] [" + getTitle() + "]"; }
 
