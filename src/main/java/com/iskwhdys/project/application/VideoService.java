@@ -38,6 +38,7 @@ public class VideoService {
 	private RestTemplate restTemplate = new RestTemplate();
 
 	public List<VideoEntity> update10min() {
+
 		// 全チャンネルのXMLを取得し、動画情報のElementを作成
 		List<Map<String, Element>> elementMaps = getChannelVideoElements();
 
@@ -53,13 +54,24 @@ public class VideoService {
 			if (videos.stream().anyMatch(v -> v.getId().equals(video.getId()))) {
 				continue; // XMLにあるなら処理しない
 			}
-			VideoSpecification.updateViaApi(video, restTemplate);
 			Boolean enabled = VideoSpecification.setThumbnail(video, restTemplate);
 			video.setEnabled(enabled);
-
+			if(enabled) {
+				VideoSpecification.updateViaApi(video, restTemplate);
+			}
 			videos.add(video);
 			logger.info("None ->" + video.getType() + " " + video.toString());
 		}
+
+		// XMLにないライブ以外の動画情報
+		var videoIds = videos.stream().map(v -> v.getId()).collect(Collectors.toList());
+		for(var video : vr.findTodayVideos(videoIds)){
+			Boolean enabled = VideoSpecification.setThumbnail(video, restTemplate);
+			video.setEnabled(enabled);
+			videos.add(video);
+			logger.info("Disabled ->" + video.getType() + " " + video.toString());
+		}
+
 		vr.saveAll(videos);
 		return videos;
 	}
