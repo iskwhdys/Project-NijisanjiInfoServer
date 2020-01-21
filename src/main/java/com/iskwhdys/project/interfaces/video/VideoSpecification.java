@@ -155,8 +155,8 @@ public class VideoSpecification {
 					return VideoEntity.TYPE_UPLOAD;
 				} else {
 					if (video.getLiveStart() == null && video.getLiveEnd() == null) return VideoEntity.TYPE_PREMIER_RESERVE;
-					if (video.getLiveStart() != null && video.getLiveEnd() == null) return VideoEntity.TYPE_PREMIER_LIVE;
-					if (video.getLiveStart() != null && video.getLiveEnd() != null) return VideoEntity.TYPE_PREMIER_UPLOAD;
+					if (video.getLiveStart() != null && video.getLiveEnd() == null) return VideoEntity.TYPE_LIVE_LIVE;
+					if (video.getLiveStart() != null && video.getLiveEnd() != null) return VideoEntity.TYPE_LIVE_ARCHIVE;
 				}
 			}
 			if ("uploaded".equals(video.getUploadStatus())) {
