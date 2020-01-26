@@ -22,6 +22,8 @@ public class ChannelSpecification {
 
 	@SuppressWarnings("unchecked")
 	private static ChannelEntity update(ChannelEntity channel, RestTemplate restTemplate, String... parts) {
+		if(Constans.YOUTUBE_API_KEY == null || "".equals(Constans.YOUTUBE_API_KEY))	return channel;
+
 		String url = Constans.YOUTUBE_API_URL + "/channels?" + "id=" + channel.getId() + "&key="
 				+ Constans.YOUTUBE_API_KEY
 				+ "&part=" + String.join(",", parts);

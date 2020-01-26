@@ -26,7 +26,7 @@ public class VideoSpecification {
 			entity.setThumbnail(Constans.BASE64_HEADER_IMAGE + base64);
 
 			buf = Common.scaleImage(buf, 176, 132, 1.0f);
-			buf = Common.trimImage(buf, 176, 98, 0.9f);
+			buf = Common.trimImage(buf, 176, 98, 1.0f);
 			base64 = Base64.getEncoder().encodeToString(buf);
 			entity.setThumbnailMini(Constans.BASE64_HEADER_IMAGE + base64);
 
@@ -58,6 +58,8 @@ public class VideoSpecification {
 
 	@SuppressWarnings("unchecked")
 	private static VideoEntity updateBaseFunction(VideoEntity entity, RestTemplate restTemplate, String... parts) {
+		if(Constans.YOUTUBE_API_KEY == null || "".equals(Constans.YOUTUBE_API_KEY))	return entity;
+
 		String url = Constans.YOUTUBE_API_URL + "/videos?" + "id=" + entity.getId() + "&key=" + Constans.YOUTUBE_API_KEY
 				+ "&part=" + String.join(",", parts);
 

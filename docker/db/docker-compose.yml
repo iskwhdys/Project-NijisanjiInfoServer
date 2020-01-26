@@ -1,0 +1,19 @@
+version: '2'
+services:
+  db-storage:
+    image: iskwhdys/2j3j_db_storage
+    container_name: 2j3j_db_storage_con
+    volumes:
+      - /var/lib/postgresql/data
+  postgres:
+    image: postgres:latest
+    container_name: 2j3j_db_con
+    ports:
+      - 15432:5432
+    volumes_from:
+      - db-storage
+    networks:
+          - 2j3j-network
+networks:
+  2j3j-network:
+    external: true

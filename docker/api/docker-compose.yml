@@ -1,0 +1,15 @@
+version: '2'
+services:
+  api:
+    build: .
+    image: 2j3j_api
+    container_name: 2j3j_api_con
+    ports:
+      - 18090:8090
+    networks:
+          - 2j3j-network
+    environment:
+      TZ: Asia/Tokyo
+networks:
+  2j3j-network:
+    external: true
