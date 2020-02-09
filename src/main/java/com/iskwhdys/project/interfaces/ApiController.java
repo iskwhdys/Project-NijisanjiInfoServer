@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.iskwhdys.project.Common;
+import com.iskwhdys.project.domain.broadcaster.BroadcasterEntity;
+import com.iskwhdys.project.domain.broadcaster.BroadcasterRepository;
 import com.iskwhdys.project.domain.channel.ChannelEntity;
 import com.iskwhdys.project.domain.channel.ChannelRepository;
 import com.iskwhdys.project.domain.video.VideoCardEntity;
@@ -35,6 +37,9 @@ public class ApiController {
 	VideoRepository vr;
 	@Autowired
 	VideoCardRepository vcr;
+	@Autowired
+	BroadcasterRepository br;
+
 
 	@ResponseBody
 	@RequestMapping(value = "/api/video", method = RequestMethod.GET)
@@ -97,6 +102,7 @@ public class ApiController {
 	}
 
 
+
 	@ResponseBody
 	@RequestMapping(value = "/api/video/{id}/thumbnail_mini", method = RequestMethod.GET)
 	public ResponseEntity<byte[]> geThumbnailMini(@PathVariable("id") String id, Model model) {
@@ -105,6 +111,22 @@ public class ApiController {
 		headers.setContentType(MediaType.IMAGE_JPEG);
 		return new ResponseEntity<>(Common.Base64ImageToByte(base64), headers, HttpStatus.OK);
 	}
+
+
+	@ResponseBody
+	@RequestMapping(value = "/api/broadcaster", method = RequestMethod.GET)
+	public List<BroadcasterEntity> getBroadcasters(Model model) {
+		return br.findAllWithoutIcon();
+	}
+	@ResponseBody
+	@RequestMapping(value = "/api/broadcaster/{id}/icon", method = RequestMethod.GET)
+	public ResponseEntity<byte[]>  getBroadcasterIcon(@PathVariable("id") String id,Model model) {
+		String base64 = br.findByIdIcon(id);
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.IMAGE_PNG);
+		return new ResponseEntity<>(Common.Base64ImageToByte(base64), headers, HttpStatus.OK);
+	}
+
 
 	@ResponseBody
 	@RequestMapping(value = "/api/channel/{id}/thumbnail_mini", method = RequestMethod.GET)

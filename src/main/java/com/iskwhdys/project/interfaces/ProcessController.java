@@ -17,8 +17,10 @@ import org.springframework.web.client.RestTemplate;
 
 import com.iskwhdys.project.application.ChannelService;
 import com.iskwhdys.project.application.VideoService;
+import com.iskwhdys.project.domain.broadcaster.BroadcasterRepository;
 import com.iskwhdys.project.domain.channel.ChannelRepository;
 import com.iskwhdys.project.domain.video.VideoRepository;
+import com.iskwhdys.project.interfaces.broadcaster.BroadcasterSpecification;
 import com.iskwhdys.project.interfaces.video.VideoSpecification;
 
 @Controller
@@ -34,6 +36,8 @@ public class ProcessController {
 	ChannelRepository channelRepository;
 	@Autowired
 	VideoRepository videoRepository;
+	@Autowired
+	BroadcasterRepository broadcasterRepository;
 
 	@Autowired
 	ChannelService channelService;
@@ -90,6 +94,15 @@ public class ProcessController {
 				video.setEnabled(success);
 			}
 			videoRepository.saveAll(videos);
+			break;
+		}
+
+		case "updateBroadcasters":{
+			var bros = broadcasterRepository.findAll();
+			for(var bro : bros) {
+				BroadcasterSpecification.setIcon(bro, restTemplate);
+			}
+			broadcasterRepository.saveAll(bros);
 			break;
 		}
 

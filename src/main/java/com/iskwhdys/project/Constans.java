@@ -20,6 +20,7 @@ public final class Constans {
 	public static final int YOUTUBE_DISLIKE_VALUE = 1;
 
 	public static final String BASE64_HEADER_IMAGE = "data:image/jpeg;base64,";
+	public static final String BASE64_HEADER_IMAGE_PNG = "data:image/png;base64,";
 
 
 	static {

@@ -89,6 +89,27 @@ public class Common {
 		}
 	}
 
+	public static byte[] scaleImagePng(final byte[] src, int width, int height, final float quality) throws IOException {
+
+		try (ByteArrayInputStream is = new ByteArrayInputStream(src);
+				ByteArrayOutputStream os = new ByteArrayOutputStream();
+				ImageOutputStream ios = ImageIO.createImageOutputStream(os)) {
+			BufferedImage srcImage = ImageIO.read(is);
+			BufferedImage destImage = resizeImage(srcImage, width, height);
+
+			// 保存品質はユーザー指定に従う
+			ImageWriter writer = ImageIO.getImageWritersByFormatName("png").next();
+			ImageWriteParam param = writer.getDefaultWriteParam();
+			param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+			param.setCompressionQuality(quality);
+			writer.setOutput(ios);
+			writer.write(null, new IIOImage(destImage, null, null), param);
+			writer.dispose();
+
+			return os.toByteArray();
+		}
+	}
+
 	private static BufferedImage resizeImage(final BufferedImage image, int width, int height) throws IOException {
 
 		BufferedImage resizedImage = new BufferedImage(width, height, image.getType());
