@@ -82,16 +82,16 @@ public class ProcessController {
 			break;
 		}
 
-		case "updateThumbnail": {
-			var videos = videoRepository.findAll();
-			for (var video : videos) {
-				video.setThumbnailUrl("https://i4.ytimg.com/vi/" +  video.getId() +  "/hqdefault.jpg");
-				boolean success = VideoSpecification.setThumbnail(video, restTemplate);
-				video.setEnabled(success);
-			}
-			videoRepository.saveAll(videos);
-			break;
-		}
+//		case "updateThumbnail": {
+//			var videos = videoRepository.findAll();
+//			for (var video : videos) {
+//				video.setThumbnailUrl("https://i4.ytimg.com/vi/" +  video.getId() +  "/hqdefault.jpg");
+//				boolean success = VideoSpecification.setThumbnail(video, restTemplate);
+//				video.setEnabled(success);
+//			}
+//			videoRepository.saveAll(videos);
+//			break;
+//		}
 
 
 		}

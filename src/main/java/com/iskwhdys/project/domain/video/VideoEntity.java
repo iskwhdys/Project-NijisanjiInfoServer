@@ -32,9 +32,6 @@ public class VideoEntity {
 	@Column(name = "description")
 	private String description;
 
-	@Column(name = "thumbnail")
-	private String thumbnail;
-
 	@Column(name = "views")
 	private Integer views;
 
@@ -80,9 +77,6 @@ public class VideoEntity {
 	@Column(name = "upload_status")
 	private String uploadStatus;
 
-	@Column(name = "thumbnail_mini")
-	private String thumbnailMini;
-
 	@Column(name = "thumbnail_url")
 	private String thumbnailUrl;
 
@@ -105,21 +99,21 @@ public class VideoEntity {
 	public static final List<String> TYPE_UPLOADS = List.of(TYPE_PREMIER_UPLOAD, TYPE_UPLOAD);
 	public static final List<String> TYPE_LIVES = List.of(TYPE_PREMIER_LIVE, TYPE_LIVE_LIVE);
 
-	public Boolean isUpload() { return TYPE_UPLOAD.equals(getType()); }
+	public boolean isUpload() { return TYPE_UPLOAD.equals(getType()); }
 
-	public Boolean isPremierReserve() { return TYPE_PREMIER_RESERVE.equals(getType()); }
+	public boolean isPremierReserve() { return TYPE_PREMIER_RESERVE.equals(getType()); }
 
-	public Boolean isPremierLive() { return TYPE_PREMIER_LIVE.equals(getType()); }
+	public boolean isPremierLive() { return TYPE_PREMIER_LIVE.equals(getType()); }
 
-	public Boolean isPremierUpload() { return TYPE_PREMIER_UPLOAD.equals(getType()); }
+	public boolean isPremierUpload() { return TYPE_PREMIER_UPLOAD.equals(getType()); }
 
-	public Boolean isLiveReserve() { return TYPE_LIVE_RESERVE.equals(getType()); }
+	public boolean isLiveReserve() { return TYPE_LIVE_RESERVE.equals(getType()); }
 
-	public Boolean isLiveLive() { return TYPE_LIVE_LIVE.equals(getType()); }
+	public boolean isLiveLive() { return TYPE_LIVE_LIVE.equals(getType()); }
 
-	public Boolean isLiveArchive() { return TYPE_LIVE_ARCHIVE.equals(getType()); }
+	public boolean isLiveArchive() { return TYPE_LIVE_ARCHIVE.equals(getType()); }
 
-	public Boolean isUnknown() { return TYPE_UNKNOWN.equals(getType()); }
+	public boolean isUnknown() { return TYPE_UNKNOWN.equals(getType()); }
 
 	public String toString() { return "Video:[" + getId() + "] [" + getTitle() + "]"; }
 
