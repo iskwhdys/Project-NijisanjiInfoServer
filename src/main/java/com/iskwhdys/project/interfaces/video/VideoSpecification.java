@@ -1,7 +1,6 @@
 package com.iskwhdys.project.interfaces.video;
 
 import java.time.Duration;
-import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -17,27 +16,6 @@ import com.iskwhdys.project.domain.video.VideoEntity;
 public class VideoSpecification {
 
 	private static Logger logger = LogManager.getLogger(VideoSpecification.class);
-
-	public static Boolean setThumbnail(VideoEntity entity, RestTemplate restTemplate) {
-
-		try {
-			byte[] buf = restTemplate.getForObject(entity.getThumbnailUrl(), byte[].class);
-			String base64 = Base64.getEncoder().encodeToString(buf);
-			entity.setThumbnail(Constans.BASE64_HEADER_IMAGE + base64);
-
-			buf = Common.scaleImage(buf, 176, 132, 1.0f);
-			buf = Common.trimImage(buf, 176, 98, 1.0f);
-			base64 = Base64.getEncoder().encodeToString(buf);
-			entity.setThumbnailMini(Constans.BASE64_HEADER_IMAGE + base64);
-
-		} catch (Exception e) {
-
-			logger.info(e);
-			logger.info(entity.getThumbnailUrl());
-			return false;
-		}
-		return true;
-	}
 
 	public static VideoEntity updateViaApi(VideoEntity entity, RestTemplate restTemplate) {
 		return updateBaseFunction(entity, restTemplate,

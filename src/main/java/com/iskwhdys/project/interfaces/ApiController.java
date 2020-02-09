@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.iskwhdys.project.Common;
+import com.iskwhdys.project.application.VideoService;
 import com.iskwhdys.project.domain.channel.ChannelEntity;
 import com.iskwhdys.project.domain.channel.ChannelRepository;
 import com.iskwhdys.project.domain.video.VideoCardEntity;
@@ -35,6 +37,9 @@ public class ApiController {
 	VideoRepository vr;
 	@Autowired
 	VideoCardRepository vcr;
+
+	@Autowired
+	VideoService videoService;
 
 	@ResponseBody
 	@RequestMapping(value = "/api/video", method = RequestMethod.GET)
@@ -98,12 +103,13 @@ public class ApiController {
 
 
 	@ResponseBody
-	@RequestMapping(value = "/api/video/{id}/thumbnail_mini", method = RequestMethod.GET)
+	@GetMapping(value = "/api/video/{id}/thumbnail_mini")
 	public ResponseEntity<byte[]> geThumbnailMini(@PathVariable("id") String id, Model model) {
-		String base64 = vr.findByIdThumbnailMini(id);
+		var bytes = videoService.getThumbnailMini(id);
+
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.IMAGE_JPEG);
-		return new ResponseEntity<>(Common.Base64ImageToByte(base64), headers, HttpStatus.OK);
+		return new ResponseEntity<>(bytes, headers, HttpStatus.OK);
 	}
 
 	@ResponseBody
