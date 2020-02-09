@@ -1,36 +1,23 @@
 package com.iskwhdys.project.application;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jdom2.Element;
-import org.jdom2.input.SAXBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
 
-import com.iskwhdys.project.Common;
-import com.iskwhdys.project.Constans;
+import com.iskwhdys.project.domain.channel.ChannelEntity;
 import com.iskwhdys.project.domain.channel.ChannelRepository;
 import com.iskwhdys.project.domain.video.VideoEntity;
+import com.iskwhdys.project.domain.video.VideoFactory;
 import com.iskwhdys.project.domain.video.VideoRepository;
-import com.iskwhdys.project.interfaces.video.VideoFactory;
-import com.iskwhdys.project.interfaces.video.VideoSpecification;
+import com.iskwhdys.project.infra.youtube.ChannelFeedXml;
+import com.iskwhdys.project.infra.youtube.VideoApi;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,220 +26,148 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class VideoService {
 
-	Logger logger = LogManager.getLogger(VideoService.class);
-
 	@Autowired
-	ChannelRepository cr;
+	ChannelRepository channelRepository;
 	@Autowired
-	VideoRepository vr;
-
-	@Value("${nis.path.image.thunbnail}")
-	String thumbnailPath;
-
-	private Map<String, byte[]> thumbnailCache = new HashMap<>();
-
-	private RestTemplate restTemplate = new RestTemplate();
+	VideoRepository videoRepository;
+	@Autowired
+	VideoThumbnailService videoThumbnailService;
 
 	public List<VideoEntity> update10min() {
 
-		// 全チャンネルのXMLを取得し、動画情報のElementを作成
-		List<Map<String, Element>> elementMaps = getChannelVideoElements();
+		// 全チャンネルID取得
+		List<String> channelIdList = channelRepository.findAll().stream().map(ChannelEntity::getId)
+				.collect(Collectors.toList());
+		// チャンネルのRssXmlから動画情報Elementを取得
+		Map<String, Element> elements = ChannelFeedXml.getVideoElement(channelIdList);
+		List<VideoEntity> videos = new ArrayList<>();
 
 		// 全動画情報Elementを元にEntityを作成 or 情報の更新
-		var videos = new ArrayList<VideoEntity>();
-		elementMaps.stream().forEach(map -> map.entrySet().stream().forEach(entry -> {
-			VideoEntity video = createOrUpdateVideo(entry.getKey(), entry.getValue());
-			videos.add(video);
-		}));
+		for (var set : elements.entrySet()) {
+			String id = set.getKey();
+			Element element = set.getValue();
 
+			var video = videoRepository.findById(id).orElse(null);
+			if (video == null) {
+				video = createNewVideo(element);
+			} else if (video.isUpload() || video.isPremierUpload()) {
+				updateUploadVideo(element, video);
+			} else if (video.isLiveArchive()) {
+				updateLiveArchiveVideo(element, video);
+			} else if (video.isPremierLive() || video.isLiveLive()) {
+				updateLiveVideo(element, video);
+			} else if (video.isPremierReserve() || video.isLiveReserve()) {
+				updateReserveVideo(element, video);
+			} else if (video.isUnknown()) {
+				updateUnknownVideo(element, video);
+			}
+			videos.add(video);
+		}
+
+		var videoIds = videos.stream().map(VideoEntity::getId).collect(Collectors.toList());
 		// XMLにないライブ情報の更新（非公開系？ライブ完了してホーム(XML)に公開されるまでの動画がここに来た）
-		for (var video : vr.findByTypeInAndEnabledTrueOrderByLiveStartDesc(VideoEntity.TYPE_LIVES)) {
-			if (videos.stream().anyMatch(v -> v.getId().equals(video.getId()))) {
-				continue; // XMLにあるなら処理しない
-			}
-			boolean success = downloadThumbnails(video);
-			video.setEnabled(success);
-			if (success) {
-				VideoSpecification.updateViaApi(video, restTemplate);
-			}
+		for (var video : videoRepository
+				.findByTypeInAndEnabledTrueAndIdNotInOrderByLiveStartDesc(VideoEntity.TYPE_LIVES, videoIds)) {
+			updateXmlNotExitVideo(video);
 			videos.add(video);
-			logger.info("None ->" + video.getType() + " " + video.toString());
 		}
-
-		// XMLにないライブ以外の動画情報
-		var videoIds = videos.stream().map(v -> v.getId()).collect(Collectors.toList());
-		for (var video : vr.findTodayVideos(videoIds)) {
-			boolean success = downloadThumbnails(video);
-			video.setEnabled(success);
+		// 24時間以内に公開された動画類でXMLに無いもの（ライブ終了直後でXMLに反映されてないもの）
+		for (var video : videoRepository.findByIdNotInAndTodayUploadVideoAndArchives(videoIds)) {
+			updatePrivateVideo(video);
 			videos.add(video);
-			logger.info("Disabled ->" + video.getType() + " " + video.toString());
 		}
-
-		vr.saveAll(videos);
+		videoRepository.saveAll(videos);
 		return videos;
 	}
 
-	private List<Map<String, Element>> getChannelVideoElements() {
-		// 全チャンネルのXMLを取得し、動画情報のElementを作成
-		List<Map<String, Element>> elementMaps = cr.findAll().stream().map(c -> {
-			String url = Constans.FEEDS_URL + "?channel_id=" + c.getId();
-			byte[] bytes = restTemplate.getForObject(url, byte[].class);
-			return bytesToIdElementMap(bytes);
-		}).collect(Collectors.toList());
+	private VideoEntity createNewVideo(Element element) {
+		var video = VideoFactory.createViaXmlElement(element);
 
-		return elementMaps;
-	}
+		videoThumbnailService.downloadThumbnails(video);
+		VideoApi.updateEntity(video);
+		log.info("API New -> " + video.getType() + " " + video.toString());
 
-	private VideoEntity createOrUpdateVideo(String id, Element element) {
-
-		var video = vr.findById(id).orElse(null);
-		if (video == null) {
-			video = VideoFactory.createViaXmlElement(element);
-
-			downloadThumbnails(video);
-			VideoSpecification.updateViaApi(video, restTemplate);
-			logger.info("API New -> " + video.getType() + " " + video.toString());
-
-		} else if (video.isUpload() || video.isPremierUpload()) {
-
-			VideoFactory.updateViaXmlElement(element, video);
-			if ((new Date().getTime() - video.getUploadDate().getTime()) < 1000 * 60 * 60 * 24) {
-				// 公開して24時間以内の動画はサムネイルを更新する
-				boolean success = downloadThumbnails(video);
-				// サムネ更新が出来ない == 動画が非公開
-				video.setEnabled(success);
-				logger.debug("XML Thumbnail -> " + video.getType() + " " + video.toString());
-			}
-
-		} else if (video.isLiveArchive()) {
-
-			VideoFactory.updateViaXmlElement(element, video);
-			if ((new Date().getTime() - video.getLiveStart().getTime()) < 1000 * 60 * 60 * 24) {
-				// 配信して24時間以内の動画はサムネイルを更新する
-				boolean success = downloadThumbnails(video);
-				// サムネ更新が出来ない == 動画が非公開
-				video.setEnabled(success);
-				logger.debug("XML Thumbnail -> " + video.getType() + " " + video.toString());
-			}
-
-		} else if (video.isPremierLive() || video.isLiveLive()) {
-
-			VideoFactory.updateViaXmlElement(element, video);
-			downloadThumbnails(video);
-			VideoSpecification.updateLiveInfoViaApi(video, restTemplate);
-
-			if (video.isPremierUpload() || video.isLiveArchive()) {
-				VideoSpecification.updateLiveToArchiveInfoViaApi(video, restTemplate);
-			}
-			logger.info("API Live -> " + video.getType() + " " + video.toString());
-
-		} else if (video.isPremierReserve() || video.isLiveReserve()) {
-
-			VideoFactory.updateViaXmlElement(element, video);
-			boolean success = downloadThumbnails(video);
-			video.setEnabled(success);
-
-			if (video.getEnabled() && (video.getLiveSchedule().before(new Date()) || video.getViews() > 0)) {
-				// 配信予定日時を過ぎた動画を対象
-				if ((new Date().getTime() - video.getLiveSchedule().getTime()) < 1000 * 60 * 60 * 24) {
-					// 配信予定時間から24時間経過していない動画のみAPIを使用する
-					VideoSpecification.updateReserveInfoViaApi(video, restTemplate);
-					if (video.isPremierUpload() || video.isLiveArchive()) {
-						VideoSpecification.updateLiveToArchiveInfoViaApi(video, restTemplate);
-					}
-					logger.info("API Reserve -> " + video.getType() + " " + video.toString());
-				}
-			}
-		} else if (video.isUnknown()) {
-
-			VideoFactory.updateViaXmlElement(element, video);
-			downloadThumbnails(video);
-			VideoSpecification.updateViaApi(video, restTemplate);
-			logger.info("API Unknown -> " + video.getType() + " " + video.toString());
-		}
 		return video;
 	}
 
-	private Map<String, Element> bytesToIdElementMap(byte[] xmlBytes) {
+	private void updateUploadVideo(Element element, VideoEntity video) {
+		VideoFactory.updateViaXmlElement(element, video);
 
-		var is = new ByteArrayInputStream(xmlBytes);
-		Element root = null;
-		try {
-			root = new SAXBuilder().build(is).getRootElement();
-		} catch (Exception e) {
-			logger.info(e);
+		if ((new Date().getTime() - video.getUploadDate().getTime()) < 1000 * 60 * 60 * 24) {
+			// 公開して24時間以内の動画はサムネイルを更新する
+			boolean success = videoThumbnailService.downloadThumbnails(video);
+			// サムネ更新が出来ない == 動画が非公開
+			video.setEnabled(success);
+			log.debug("XML Thumbnail -> " + video.getType() + " " + video.toString());
 		}
-
-		var entries = root.getChildren().stream().filter(p -> p.getName().contains("entry"))
-				.collect(Collectors.toList());
-		var map = new HashMap<String, Element>();
-		for (var element : entries) {
-			String id = element.getChildren().stream().filter(e -> e.getName().equals("videoId")).findFirst().get()
-					.getValue();
-
-			map.put(id, element);
-		}
-		return map;
 	}
 
-	public byte[] getThumbnailMini(String videoId) {
+	private void updateLiveArchiveVideo(Element element, VideoEntity video) {
 
-		if (thumbnailCache.containsKey(videoId)) {
-			log.trace("Thumbnail-Cache:" + videoId);
-			return thumbnailCache.get(videoId);
-		}
+		VideoFactory.updateViaXmlElement(element, video);
 
-		Path resizePath = Paths.get(thumbnailPath, videoId + "_mini.jpg");
-		if (Files.exists(resizePath)) {
-			try {
-				thumbnailCache.put(videoId, Files.readAllBytes(resizePath));
-				log.info("Thumbnail-Read:" + videoId);
-			} catch (IOException e) {
-				throw new ResourceAccessException("File read error", e);
-			}
-			return thumbnailCache.get(videoId);
+		if ((new Date().getTime() - video.getLiveStart().getTime()) < 1000 * 60 * 60 * 24) {
+			// 配信して24時間以内の動画はサムネイルを更新する
+			boolean success = videoThumbnailService.downloadThumbnails(video);
+			// サムネ更新が出来ない == 動画が非公開
+			video.setEnabled(success);
+			log.debug("XML Thumbnail -> " + video.getType() + " " + video.toString());
 		}
-
-		var videoEntity = vr.findById(videoId);
-		if (videoEntity.isEmpty()) {
-			throw new ResourceAccessException("Not found video id");
-		}
-
-		log.info("Thumbnail-Dowmload:" + videoEntity.get().getTitle());
-		boolean success = downloadThumbnails(videoEntity.get());
-		if (!success) {
-			throw new ResourceAccessException("Download error");
-		}
-
-		try {
-			thumbnailCache.put(videoId, Files.readAllBytes(resizePath));
-		} catch (IOException e) {
-			throw new ResourceAccessException("File read error", e);
-		}
-		return thumbnailCache.get(videoId);
 	}
 
-	private boolean downloadThumbnails(VideoEntity entity) {
-		try {
-			var dirPath = Paths.get(thumbnailPath);
+	private void updateLiveVideo(Element element, VideoEntity video) {
 
-			Path orginPath = Paths.get(dirPath.toString(), entity.getId() + ".jpg");
-			Path resizePath = Paths.get(dirPath.toString(), entity.getId() + "_mini.jpg");
+		VideoFactory.updateViaXmlElement(element, video);
+		videoThumbnailService.downloadThumbnails(video);
+		VideoApi.updateLiveInfoViaApi(video);
 
-			byte[] bytes = restTemplate.getForObject(entity.getThumbnailUrl(), byte[].class);
-
-			Files.createDirectories(dirPath);
-			Files.write(orginPath, bytes, StandardOpenOption.CREATE);
-
-			bytes = Common.scaleImage(bytes, 176, 132, 1.0f);
-			bytes = Common.trimImage(bytes, 176, 98, 1.0f);
-
-			Files.write(resizePath, bytes, StandardOpenOption.CREATE);
-		} catch (Exception e) {
-			log.error(entity.getThumbnailUrl());
-			return false;
+		if (video.isPremierUpload() || video.isLiveArchive()) {
+			VideoApi.updateLiveToArchiveInfoViaApi(video);
 		}
-		return true;
+		log.info("API Live -> " + video.getType() + " " + video.toString());
+	}
+
+	private void updateReserveVideo(Element element, VideoEntity video) {
+
+		VideoFactory.updateViaXmlElement(element, video);
+		boolean success = videoThumbnailService.downloadThumbnails(video);
+		video.setEnabled(success);
+
+		// 無効な動画は除外
+		if (Boolean.FALSE.equals(video.getEnabled())) return;
+		// 配信予定日時を過ぎてない動画 もしくは再生が0の動画は除外
+		if (video.getLiveSchedule().after(new Date()) || video.getViews() == 0) return;
+		// 配信予定日時が24時間を超えた動画は除外
+		if ((new Date().getTime() - video.getLiveSchedule().getTime()) > 1000 * 60 * 60 * 24) return;
+
+		VideoApi.updateReserveInfoViaApi(video);
+		if (video.isPremierUpload() || video.isLiveArchive()) {
+			VideoApi.updateLiveToArchiveInfoViaApi(video);
+		}
+		log.info("API Reserve -> " + video.getType() + " " + video.toString());
+	}
+
+	private void updateUnknownVideo(Element element, VideoEntity video) {
+		VideoFactory.updateViaXmlElement(element, video);
+		videoThumbnailService.downloadThumbnails(video);
+		VideoApi.updateEntity(video);
+		log.info("API Unknown -> " + video.getType() + " " + video.toString());
+	}
+
+	private void updateXmlNotExitVideo(VideoEntity video) {
+		boolean success = videoThumbnailService.downloadThumbnails(video);
+		video.setEnabled(success);
+		if (success) {
+			VideoApi.updateEntity(video);
+			log.info("API None ->" + video.getType() + " " + video.toString());
+		} else {
+			log.info("XML None ->" + video.getType() + " " + video.toString());
+		}
+	}
+
+	private void updatePrivateVideo(VideoEntity video) {
+		video.setEnabled(videoThumbnailService.downloadThumbnails(video));
+		log.info("Private ->" + video.getType() + " " + video.toString());
 	}
 
 }

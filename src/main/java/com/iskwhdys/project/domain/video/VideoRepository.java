@@ -8,10 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface VideoRepository extends JpaRepository<VideoEntity, String>, JpaSpecificationExecutor<VideoEntity> {
 
-    @Query(value = "select thumbnail_mini from public.videos where id = ?1" , nativeQuery = true)
-    String findByIdThumbnailMini(String id);
-
-	List<VideoEntity> findByTypeInAndEnabledTrueOrderByLiveStartDesc(List<String> of);
+	List<VideoEntity> findByTypeInAndEnabledTrueAndIdNotInOrderByLiveStartDesc(List<String> type, List<String> id);
+	List<VideoEntity> findByTypeInAndEnabledTrueOrderByLiveStartDesc(List<String> type);
 
 
     @Query(value =
@@ -22,6 +20,6 @@ public interface VideoRepository extends JpaRepository<VideoEntity, String>, Jpa
     		"	 (type='PremierUpload' and (CURRENT_TIMESTAMP - live_start) < '24:00:00') or " +
     		"	 (type='LiveArchive' and (CURRENT_TIMESTAMP - live_start) < '24:00:00')) and" +
     		"	enabled = true" , nativeQuery = true)
-	List<VideoEntity> findTodayVideos(List<String> of);
+	List<VideoEntity> findByIdNotInAndTodayUploadVideoAndArchives(List<String> of);
 
 }

@@ -1,52 +1,52 @@
-package com.iskwhdys.project.interfaces.video;
+package com.iskwhdys.project.infra.youtube;
 
 import java.time.Duration;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.web.client.RestTemplate;
 
 import com.iskwhdys.project.Common;
 import com.iskwhdys.project.Constans;
 import com.iskwhdys.project.domain.video.VideoEntity;
 
-public class VideoSpecification {
+@SuppressWarnings("squid:S1192")
+public class VideoApi {
 
-	private static Logger logger = LogManager.getLogger(VideoSpecification.class);
+	private static RestTemplate restTemplate = new RestTemplate();
 
-	public static VideoEntity updateViaApi(VideoEntity entity, RestTemplate restTemplate) {
-		return updateBaseFunction(entity, restTemplate,
-				"snippet", "statistics", "contentDetails", "liveStreamingDetails", "status");
+	private VideoApi() {}
+
+	public static VideoEntity updateEntity(VideoEntity entity) {
+		return updateBaseFunction(entity, "snippet", "statistics", "contentDetails", "liveStreamingDetails", "status");
 	}
 
-	public static VideoEntity updateLiveInfoViaApi(VideoEntity entity, RestTemplate restTemplate) {
-		return updateBaseFunction(entity, restTemplate, "liveStreamingDetails");
+	public static VideoEntity updateLiveInfoViaApi(VideoEntity entity) {
+		return updateBaseFunction(entity, "liveStreamingDetails");
 	}
 
-	public static VideoEntity updateLiveToArchiveInfoViaApi(VideoEntity entity, RestTemplate restTemplate) {
-		return updateBaseFunction(entity, restTemplate, "contentDetails");
+	public static VideoEntity updateLiveToArchiveInfoViaApi(VideoEntity entity) {
+		return updateBaseFunction(entity, "contentDetails");
 	}
 
-	public static VideoEntity updateReserveInfoViaApi(VideoEntity entity, RestTemplate restTemplate) {
-		return updateBaseFunction(entity, restTemplate, "liveStreamingDetails");
+	public static VideoEntity updateReserveInfoViaApi(VideoEntity entity) {
+		return updateBaseFunction(entity, "liveStreamingDetails");
 	}
 
 	@SuppressWarnings("unchecked")
-	private static VideoEntity updateBaseFunction(VideoEntity entity, RestTemplate restTemplate, String... parts) {
-		if(Constans.YOUTUBE_API_KEY == null || "".equals(Constans.YOUTUBE_API_KEY))	return entity;
+	private static VideoEntity updateBaseFunction(VideoEntity entity, String... parts) {
+		if (Constans.YOUTUBE_API_KEY == null || "".equals(Constans.YOUTUBE_API_KEY)) return entity;
 
 		String url = Constans.YOUTUBE_API_URL + "/videos?" + "id=" + entity.getId() + "&key=" + Constans.YOUTUBE_API_KEY
 				+ "&part=" + String.join(",", parts);
 
 		var items = (List<Map<String, ?>>) restTemplate.getForObject(url, Map.class).get("items");
-		if (items.size() == 0) {
+		if (items.isEmpty()) {
 			entity.setEnabled(false);
 			return entity;
 		}
-		var item = (Map<String, ?>) items.get(0);
+		Map<String, ?> item = items.get(0);
 
 		entity.setEtag(item.get("etag").toString());
 		for (String part : parts) {
@@ -114,8 +114,8 @@ public class VideoSpecification {
 		int starAve = Integer.parseInt(strStarAve.replace(".", ""));
 
 		for (int i = count; i > 0; i--) {
-			double like = Constans.YOUTUBE_LIKE_VALUE * i;
-			double dislike = Constans.YOUTUBE_DISLIKE_VALUE * (count - i);
+			int like = Constans.YOUTUBE_LIKE_VALUE * i;
+			int dislike = Constans.YOUTUBE_DISLIKE_VALUE * (count - i);
 			double ave = (like + dislike) / (double) count;
 			int num = (int) (ave * 100);
 
@@ -127,16 +127,21 @@ public class VideoSpecification {
 		return 0;
 	}
 
+	@SuppressWarnings("squid:S3776")
 	public static String getType(VideoEntity video) {
 		if (video.getType() == null || video.isUnknown()) {
 			// 初回
 			if ("processed".equals(video.getUploadStatus())) {
 				if (video.getLiveSchedule() == null) {
+					if (video.getLiveStart() != null || video.getLiveEnd() != null)
+						return VideoEntity.TYPE_LIVE_ARCHIVE;
 					return VideoEntity.TYPE_UPLOAD;
 				} else {
-					if (video.getLiveStart() == null && video.getLiveEnd() == null) return VideoEntity.TYPE_PREMIER_RESERVE;
+					if (video.getLiveStart() == null && video.getLiveEnd() == null)
+						return VideoEntity.TYPE_PREMIER_RESERVE;
 					if (video.getLiveStart() != null && video.getLiveEnd() == null) return VideoEntity.TYPE_LIVE_LIVE;
-					if (video.getLiveStart() != null && video.getLiveEnd() != null) return VideoEntity.TYPE_LIVE_ARCHIVE;
+					if (video.getLiveStart() != null && video.getLiveEnd() != null)
+						return VideoEntity.TYPE_LIVE_ARCHIVE;
 				}
 			}
 			if ("uploaded".equals(video.getUploadStatus())) {
@@ -161,4 +166,5 @@ public class VideoSpecification {
 		}
 		return VideoEntity.TYPE_UNKNOWN;
 	}
+
 }

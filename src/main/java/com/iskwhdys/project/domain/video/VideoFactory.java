@@ -1,13 +1,15 @@
-package com.iskwhdys.project.interfaces.video;
+package com.iskwhdys.project.domain.video;
 
 import java.util.Date;
 
 import org.jdom2.Element;
 
 import com.iskwhdys.project.Common;
-import com.iskwhdys.project.domain.video.VideoEntity;
+import com.iskwhdys.project.infra.youtube.VideoApi;
 
 public class VideoFactory {
+
+	private VideoFactory() {}
 
 	public static VideoEntity createViaXmlElement(Element entry) {
 		var video = updateViaXmlElement(entry, new VideoEntity());
@@ -31,10 +33,12 @@ public class VideoFactory {
 				entity.setTitle(element.getValue());
 				break;
 			case "published":
-				entity.setUploadDate(Common.youtubeTimeToDate(element.getValue().toString()));
+				entity.setUploadDate(Common.youtubeTimeToDate(element.getValue()));
 				break;
 			case "group":
 				group = element;
+				break;
+			default:
 				break;
 			}
 		}
@@ -53,6 +57,8 @@ public class VideoFactory {
 			case "community":
 				community = element;
 				break;
+			default:
+				break;
 			}
 		}
 		if (community == null)
@@ -61,16 +67,17 @@ public class VideoFactory {
 		for (Element element : community.getChildren()) {
 			switch (element.getName()) {
 			case "starRating":
-				int count = Integer.parseInt(element.getAttributeValue("count").toString());
-				String ave = element.getAttributeValue("average").toString();
-				int like = VideoSpecification.getLikeCount(count, ave);
+				int count = Integer.parseInt(element.getAttributeValue("count"));
+				String ave = element.getAttributeValue("average");
+				int like = VideoApi.getLikeCount(count, ave);
 				int dislike = count - like;
 				entity.setLikes(like);
 				entity.setDislikes(dislike);
-
 				break;
 			case "statistics":
-				entity.setViews(Integer.parseInt(element.getAttributeValue("views").toString()));
+				entity.setViews(Integer.parseInt(element.getAttributeValue("views")));
+				break;
+			default:
 				break;
 			}
 		}

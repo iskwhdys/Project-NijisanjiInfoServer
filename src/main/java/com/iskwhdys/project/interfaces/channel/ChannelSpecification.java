@@ -8,11 +8,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.web.client.RestTemplate;
 
-import com.iskwhdys.project.Common;
 import com.iskwhdys.project.Constans;
 import com.iskwhdys.project.domain.channel.ChannelEntity;
+import com.iskwhdys.project.infra.util.ImageEditor;
 
 public class ChannelSpecification {
+
+	private ChannelSpecification() {}
 
 	private static Logger logger = LogManager.getLogger(ChannelSpecification.class);
 
@@ -29,10 +31,10 @@ public class ChannelSpecification {
 				+ "&part=" + String.join(",", parts);
 
 		var items = (List<Map<String, ?>>) restTemplate.getForObject(url, Map.class).get("items");
-		if (items.size() == 0) {
+		if (items.isEmpty()) {
 			return channel;
 		}
-		var item = (Map<String, ?>) items.get(0);
+		Map<String, ?> item = items.get(0);
 		for (String part : parts) {
 			var map = (Map<String, ?>) item.get(part);
 			if (part.equals("snippet")) setSnippet(channel, map);
@@ -50,7 +52,7 @@ public class ChannelSpecification {
 			String base64 = Base64.getEncoder().encodeToString(buf);
 			channel.setThumbnail(Constans.BASE64_HEADER_IMAGE + base64);
 
-			buf = Common.scaleImage(buf, 30, 30, 1.0f);
+			buf = ImageEditor.resize(buf, 30, 30, 1.0f);
 			base64 = Base64.getEncoder().encodeToString(buf);
 			channel.setSmallThumbnail(Constans.BASE64_HEADER_IMAGE + base64);
 		} catch (Exception e) {
