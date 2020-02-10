@@ -1,22 +1,16 @@
 package com.iskwhdys.project.interfaces.channel;
 
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.web.client.RestTemplate;
 
 import com.iskwhdys.project.Constans;
 import com.iskwhdys.project.domain.channel.ChannelEntity;
-import com.iskwhdys.project.infra.util.ImageEditor;
 
 public class ChannelSpecification {
 
 	private ChannelSpecification() {}
-
-	private static Logger logger = LogManager.getLogger(ChannelSpecification.class);
 
 	public static ChannelEntity update(ChannelEntity channel, RestTemplate restTemplate) {
 		return update(channel, restTemplate, "snippet", "statistics");
@@ -41,24 +35,7 @@ public class ChannelSpecification {
 			else if (part.equals("statistics")) setStatistics(channel, map);
 		}
 
-		setThumbnail(channel, restTemplate);
 		return channel;
-	}
-
-	private static void setThumbnail(ChannelEntity channel, RestTemplate restTemplate) {
-
-		try {
-			byte[] buf = restTemplate.getForObject(channel.getThumbnail(), byte[].class);
-			String base64 = Base64.getEncoder().encodeToString(buf);
-			channel.setThumbnail(Constans.BASE64_HEADER_IMAGE + base64);
-
-			buf = ImageEditor.resize(buf, 30, 30, 1.0f);
-			base64 = Base64.getEncoder().encodeToString(buf);
-			channel.setSmallThumbnail(Constans.BASE64_HEADER_IMAGE + base64);
-		} catch (Exception e) {
-			logger.info(e);
-			logger.info(channel.getThumbnail());
-		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -71,7 +48,7 @@ public class ChannelSpecification {
 			for (var key : new String[] { "default", "medium", "high" }) {
 				if (thumbnails.containsKey(key)) {
 					var th = (Map<String, ?>) thumbnails.get(key);
-					channel.setThumbnail(th.get("url").toString());
+					channel.setThumbnailUrl(th.get("url").toString());
 					break;
 				}
 			}

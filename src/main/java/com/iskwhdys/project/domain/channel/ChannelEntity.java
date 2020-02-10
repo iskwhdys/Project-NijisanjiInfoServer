@@ -29,11 +29,8 @@ public class ChannelEntity {
 	@Column(name = "subscriber_count")
 	private Integer subscriberCount;
 
-	@Column(name = "thumbnail")
-	private String thumbnail;
-
-	@Column(name = "small_thumbnail")
-	private String smallThumbnail;
+	@Column(name = "thumbnail_url")
+	private String thumbnailUrl;
 
 	public String toString() { return "Channel:[" + getId() + "] [" + getTitle() + "]"; }
 }

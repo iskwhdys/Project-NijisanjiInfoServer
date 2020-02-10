@@ -18,6 +18,9 @@ public class ChannelService {
 	@Autowired
 	ChannelRepository channelRepository;
 
+	@Autowired
+	ChannelImageService channelImageService;
+
 	private RestTemplate restTemplate = new RestTemplate();
 
 	public ChannelEntity createOrUpdate(String id) {
@@ -28,6 +31,8 @@ public class ChannelService {
 		}
 
 		ChannelSpecification.update(channel, restTemplate);
+		channelImageService.downloadThumbnail(channel);
+
 		channelRepository.save(channel);
 
 		return channel;
@@ -37,6 +42,8 @@ public class ChannelService {
 		var channels = channelRepository.findAll();
 		for (var channel : channels) {
 			ChannelSpecification.update(channel, restTemplate);
+			channelImageService.downloadThumbnail(channel);
+
 			channelRepository.save(channel);
 		}
 		channelRepository.saveAll(channels);

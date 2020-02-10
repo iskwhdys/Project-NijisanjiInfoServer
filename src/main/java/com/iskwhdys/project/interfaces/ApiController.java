@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.iskwhdys.project.Common;
+import com.iskwhdys.project.application.ChannelImageService;
 import com.iskwhdys.project.application.VideoService;
 import com.iskwhdys.project.application.VideoThumbnailService;
 import com.iskwhdys.project.domain.channel.ChannelEntity;
@@ -42,6 +43,8 @@ public class ApiController {
 	VideoService videoService;
 	@Autowired
 	VideoThumbnailService videoThumbnailService;
+	@Autowired
+	ChannelImageService channelImageService;
 
 	@ResponseBody
 	@GetMapping(value = "/api/video")
@@ -117,31 +120,33 @@ public class ApiController {
 	@ResponseBody
 	@GetMapping(value = "/api/channel/{id}/thumbnail_mini")
 	public ResponseEntity<byte[]> getChannelThumbnailMini(@PathVariable("id") String id, Model model) {
-		String base64 = cr.findByIdThumbnailMini(id);
+		var bytes = channelImageService.getThumbnailMini(id);
+
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.IMAGE_JPEG);
-		return new ResponseEntity<>(Common.base64ImageToByte(base64), headers, HttpStatus.OK);
+		return new ResponseEntity<>(bytes, headers, HttpStatus.OK);
 	}
 
 	@ResponseBody
 	@GetMapping(value = "/api/channel/{id}/thumbnail")
 	public ResponseEntity<byte[]> getChannelThumbnail(@PathVariable("id") String id, Model model) {
-		String base64 = cr.findByIdThumbnail(id);
+		var bytes = channelImageService.getThumbnail(id);
+
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.IMAGE_JPEG);
-		return new ResponseEntity<>(Common.base64ImageToByte(base64), headers, HttpStatus.OK);
+		return new ResponseEntity<>(bytes, headers, HttpStatus.OK);
 	}
 
 	@ResponseBody
 	@GetMapping(value = "/api/channel")
 	public List<ChannelEntity> getChannels(Model model) {
-		return cr.findAllWithoutThumbnail();
+		return cr.findAll();
 
 	}
 	@ResponseBody
 	@GetMapping(value = "/api/channel/{id}")
 	public ChannelEntity getChannels(@PathVariable("id") String id, Model model) {
-		return cr.findByIdWithoutThumbnail(id);
+		return cr.findById(id).orElse(null);
 
 	}
 }
