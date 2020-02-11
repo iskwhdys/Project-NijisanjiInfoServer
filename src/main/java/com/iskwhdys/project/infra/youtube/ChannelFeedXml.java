@@ -12,13 +12,12 @@ import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
 import org.springframework.web.client.RestTemplate;
 
-import com.iskwhdys.project.Constans;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ChannelFeedXml {
 
+	private static final String FEEDS_URL = "https://www.youtube.com/feeds/videos.xml";
 	private static RestTemplate restTemplate = new RestTemplate();
 
 	private ChannelFeedXml() {}
@@ -28,7 +27,7 @@ public class ChannelFeedXml {
 
 		for (var channelId : channelIdList) {
 
-			String url = Constans.FEEDS_URL + "?channel_id=" + channelId;
+			String url = FEEDS_URL + "?channel_id=" + channelId;
 
 			byte[] bytes = restTemplate.getForObject(url, byte[].class);
 

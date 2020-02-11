@@ -29,7 +29,6 @@ build/
 
 ### VS Code ###
 .vscode/
-/YoutubeApiKey.txt
 /ScrapBook.jpage
 /logs/
 /data/

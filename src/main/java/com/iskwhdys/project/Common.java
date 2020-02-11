@@ -2,7 +2,6 @@ package com.iskwhdys.project;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -10,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class Common {
+
+	public static final int UTC_TIME = 9;
 
 	private Common() {}
 
@@ -19,7 +20,7 @@ public class Common {
 
 		var cal = Calendar.getInstance();
 		cal.setTime(toDate(datetime));
-		cal.add(Calendar.HOUR, Constans.UTC_TIME);
+		cal.add(Calendar.HOUR, UTC_TIME);
 
 		return cal.getTime();
 	}
@@ -33,11 +34,6 @@ public class Common {
 			log.error(e.toString(), e);
 		}
 		return null;
-	}
-
-	public static byte[] base64ImageToByte(String base64) {
-		base64 = base64.substring(Constans.BASE64_HEADER_IMAGE.length());
-		return Base64.getDecoder().decode(base64);
 	}
 
 }

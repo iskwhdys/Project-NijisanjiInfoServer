@@ -16,8 +16,9 @@ import com.iskwhdys.project.domain.channel.ChannelRepository;
 import com.iskwhdys.project.domain.video.VideoEntity;
 import com.iskwhdys.project.domain.video.VideoFactory;
 import com.iskwhdys.project.domain.video.VideoRepository;
+import com.iskwhdys.project.domain.video.VideoSpecification;
+import com.iskwhdys.project.infra.twitter.TwitterApi;
 import com.iskwhdys.project.infra.youtube.ChannelFeedXml;
-import com.iskwhdys.project.infra.youtube.VideoApi;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,6 +33,15 @@ public class VideoService {
 	VideoRepository videoRepository;
 	@Autowired
 	VideoThumbnailService videoThumbnailService;
+
+	@Autowired
+	VideoFactory videoFactory;
+
+	@Autowired
+	TwitterApi twitterApi;
+
+	@Autowired
+	VideoSpecification videoApi;
 
 	public List<VideoEntity> update10min() {
 
@@ -81,17 +91,20 @@ public class VideoService {
 	}
 
 	private VideoEntity createNewVideo(Element element) {
-		var video = VideoFactory.createViaXmlElement(element);
+		var video = videoFactory.createViaXmlElement(element);
 
 		videoThumbnailService.downloadThumbnails(video);
-		VideoApi.updateEntity(video);
+		videoApi.updateEntity(video);
+		if (video.isPremierLive() || video.isLiveLive()) {
+			tweet(video);
+		}
 		log.info("API New -> " + video.getType() + " " + video.toString());
 
 		return video;
 	}
 
 	private void updateUploadVideo(Element element, VideoEntity video) {
-		VideoFactory.updateViaXmlElement(element, video);
+		videoFactory.updateViaXmlElement(element, video);
 
 		if ((new Date().getTime() - video.getUploadDate().getTime()) < 1000 * 60 * 60 * 24) {
 			// 公開して24時間以内の動画はサムネイルを更新する
@@ -104,7 +117,7 @@ public class VideoService {
 
 	private void updateLiveArchiveVideo(Element element, VideoEntity video) {
 
-		VideoFactory.updateViaXmlElement(element, video);
+		videoFactory.updateViaXmlElement(element, video);
 
 		if ((new Date().getTime() - video.getLiveStart().getTime()) < 1000 * 60 * 60 * 24) {
 			// 配信して24時間以内の動画はサムネイルを更新する
@@ -117,19 +130,19 @@ public class VideoService {
 
 	private void updateLiveVideo(Element element, VideoEntity video) {
 
-		VideoFactory.updateViaXmlElement(element, video);
+		videoFactory.updateViaXmlElement(element, video);
 		videoThumbnailService.downloadThumbnails(video);
-		VideoApi.updateLiveInfoViaApi(video);
+		videoApi.updateLiveInfoViaApi(video);
 
 		if (video.isPremierUpload() || video.isLiveArchive()) {
-			VideoApi.updateLiveToArchiveInfoViaApi(video);
+			videoApi.updateLiveToArchiveInfoViaApi(video);
 		}
 		log.info("API Live -> " + video.getType() + " " + video.toString());
 	}
 
 	private void updateReserveVideo(Element element, VideoEntity video) {
 
-		VideoFactory.updateViaXmlElement(element, video);
+		videoFactory.updateViaXmlElement(element, video);
 		boolean success = videoThumbnailService.downloadThumbnails(video);
 		video.setEnabled(success);
 
@@ -140,17 +153,20 @@ public class VideoService {
 		// 配信予定日時が24時間を超えた動画は除外
 		if ((new Date().getTime() - video.getLiveSchedule().getTime()) > 1000 * 60 * 60 * 24) return;
 
-		VideoApi.updateReserveInfoViaApi(video);
+		videoApi.updateReserveInfoViaApi(video);
 		if (video.isPremierUpload() || video.isLiveArchive()) {
-			VideoApi.updateLiveToArchiveInfoViaApi(video);
+			videoApi.updateLiveToArchiveInfoViaApi(video);
+		}
+		if (video.isPremierLive() || video.isLiveLive()) {
+			tweet(video);
 		}
 		log.info("API Reserve -> " + video.getType() + " " + video.toString());
 	}
 
 	private void updateUnknownVideo(Element element, VideoEntity video) {
-		VideoFactory.updateViaXmlElement(element, video);
+		videoFactory.updateViaXmlElement(element, video);
 		videoThumbnailService.downloadThumbnails(video);
-		VideoApi.updateEntity(video);
+		videoApi.updateEntity(video);
 		log.info("API Unknown -> " + video.getType() + " " + video.toString());
 	}
 
@@ -158,7 +174,7 @@ public class VideoService {
 		boolean success = videoThumbnailService.downloadThumbnails(video);
 		video.setEnabled(success);
 		if (success) {
-			VideoApi.updateEntity(video);
+			videoApi.updateEntity(video);
 			log.info("API None ->" + video.getType() + " " + video.toString());
 		} else {
 			log.info("XML None ->" + video.getType() + " " + video.toString());
@@ -170,4 +186,19 @@ public class VideoService {
 		log.info("Private ->" + video.getType() + " " + video.toString());
 	}
 
+	private void tweet(VideoEntity video) {
+		var result = new StringBuilder();
+		result.append("～配信開始～\r\n");
+		var channel = channelRepository.findById(video.getChannelId());
+		if (channel.isPresent()) {
+			result.append(channel.get().getTitle() + "\r\n");
+		}
+		result.append(video.getTitle() + "\r\n");
+		result.append("https://www.youtube.com/watch?v=" + video.getId() + "\r\n");
+		result.append("\r\n");
+		result.append("～その他の配信情報はこちら～\r\n");
+		result.append("にじさんじライブ新着 http://nijisanji-live.com");
+
+		twitterApi.tweet(result.toString());
+	}
 }

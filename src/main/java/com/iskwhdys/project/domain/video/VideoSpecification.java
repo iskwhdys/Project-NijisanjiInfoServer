@@ -1,47 +1,41 @@
-package com.iskwhdys.project.infra.youtube;
+package com.iskwhdys.project.domain.video;
 
 import java.time.Duration;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
-import org.springframework.web.client.RestTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import com.iskwhdys.project.Common;
-import com.iskwhdys.project.Constans;
-import com.iskwhdys.project.domain.video.VideoEntity;
+import com.iskwhdys.project.infra.youtube.YoutubeApi;
 
+@Component
 @SuppressWarnings("squid:S1192")
-public class VideoApi {
+public class VideoSpecification {
 
-	private static RestTemplate restTemplate = new RestTemplate();
+	@Autowired
+	YoutubeApi youtubeApi;
 
-	private VideoApi() {}
-
-	public static VideoEntity updateEntity(VideoEntity entity) {
+	public VideoEntity updateEntity(VideoEntity entity) {
 		return updateBaseFunction(entity, "snippet", "statistics", "contentDetails", "liveStreamingDetails", "status");
 	}
 
-	public static VideoEntity updateLiveInfoViaApi(VideoEntity entity) {
+	public VideoEntity updateLiveInfoViaApi(VideoEntity entity) {
 		return updateBaseFunction(entity, "liveStreamingDetails");
 	}
 
-	public static VideoEntity updateLiveToArchiveInfoViaApi(VideoEntity entity) {
+	public VideoEntity updateLiveToArchiveInfoViaApi(VideoEntity entity) {
 		return updateBaseFunction(entity, "contentDetails");
 	}
 
-	public static VideoEntity updateReserveInfoViaApi(VideoEntity entity) {
+	public VideoEntity updateReserveInfoViaApi(VideoEntity entity) {
 		return updateBaseFunction(entity, "liveStreamingDetails");
 	}
 
 	@SuppressWarnings("unchecked")
-	private static VideoEntity updateBaseFunction(VideoEntity entity, String... parts) {
-		if (Constans.YOUTUBE_API_KEY == null || "".equals(Constans.YOUTUBE_API_KEY)) return entity;
-
-		String url = Constans.YOUTUBE_API_URL + "/videos?" + "id=" + entity.getId() + "&key=" + Constans.YOUTUBE_API_KEY
-				+ "&part=" + String.join(",", parts);
-
-		var items = (List<Map<String, ?>>) restTemplate.getForObject(url, Map.class).get("items");
+	private VideoEntity updateBaseFunction(VideoEntity entity, String... parts) {
+		var items = youtubeApi.downloadVideoItems(entity.getId(), parts);
 		if (items.isEmpty()) {
 			entity.setEnabled(false);
 			return entity;
@@ -63,14 +57,14 @@ public class VideoApi {
 		return entity;
 	}
 
-	private static VideoEntity setSnippet(VideoEntity video, Map<String, ?> map) {
+	private VideoEntity setSnippet(VideoEntity video, Map<String, ?> map) {
 		if (map == null) return video;
 		if (map.containsKey("title")) video.setTitle(map.get("title").toString());
 		if (map.containsKey("description")) video.setDescription(map.get("description").toString());
 		return video;
 	}
 
-	private static VideoEntity setStatistics(VideoEntity video, Map<String, ?> map) {
+	private VideoEntity setStatistics(VideoEntity video, Map<String, ?> map) {
 		if (map == null) return video;
 		if (map.containsKey("viewCount")) video.setViews(toInteger(map, "viewCount"));
 		if (map.containsKey("likeCount")) video.setLikes(toInteger(map, "likeCount"));
@@ -80,14 +74,14 @@ public class VideoApi {
 		return video;
 	}
 
-	private static VideoEntity setContentDetails(VideoEntity video, Map<String, ?> map) {
+	private VideoEntity setContentDetails(VideoEntity video, Map<String, ?> map) {
 		if (map == null) return video;
 		String duration = map.get("duration").toString();
 		video.setDuration((int) Duration.parse(duration).toSeconds());
 		return video;
 	}
 
-	private static VideoEntity setLiveStreamingDetails(VideoEntity video, Map<String, ?> map) {
+	private VideoEntity setLiveStreamingDetails(VideoEntity video, Map<String, ?> map) {
 		if (map == null) return video;
 		if (map.containsKey("actualStartTime")) video.setLiveStart(toDate(map, "actualStartTime"));
 		if (map.containsKey("actualEndTime")) video.setLiveEnd(toDate(map, "actualEndTime"));
@@ -96,39 +90,18 @@ public class VideoApi {
 		return video;
 	}
 
-	private static VideoEntity setStatus(VideoEntity video, Map<String, ?> map) {
+	private VideoEntity setStatus(VideoEntity video, Map<String, ?> map) {
 		if (map == null) return video;
 		if (map.containsKey("uploadStatus")) video.setUploadStatus(map.get("uploadStatus").toString());
 		return video;
 	}
 
-	private static Date toDate(Map<String, ?> map, String key) {
-		return Common.youtubeTimeToDate(map.get(key).toString());
-	}
+	private Date toDate(Map<String, ?> map, String key) { return Common.youtubeTimeToDate(map.get(key).toString()); }
 
-	private static Integer toInteger(Map<String, ?> map, String key) {
-		return Integer.parseInt(map.get(key).toString());
-	}
-
-	public static int getLikeCount(int count, String strStarAve) {
-		int starAve = Integer.parseInt(strStarAve.replace(".", ""));
-
-		for (int i = count; i > 0; i--) {
-			int like = Constans.YOUTUBE_LIKE_VALUE * i;
-			int dislike = Constans.YOUTUBE_DISLIKE_VALUE * (count - i);
-			double ave = (like + dislike) / (double) count;
-			int num = (int) (ave * 100);
-
-			if (num <= starAve) {
-				return i;
-			}
-		}
-
-		return 0;
-	}
+	private Integer toInteger(Map<String, ?> map, String key) { return Integer.parseInt(map.get(key).toString()); }
 
 	@SuppressWarnings("squid:S3776")
-	public static String getType(VideoEntity video) {
+	public String getType(VideoEntity video) {
 		if (video.getType() == null || video.isUnknown()) {
 			// 初回
 			if ("processed".equals(video.getUploadStatus())) {

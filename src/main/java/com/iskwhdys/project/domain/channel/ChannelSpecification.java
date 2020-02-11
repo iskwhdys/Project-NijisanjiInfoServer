@@ -1,30 +1,25 @@
-package com.iskwhdys.project.interfaces.channel;
+package com.iskwhdys.project.domain.channel;
 
-import java.util.List;
 import java.util.Map;
 
-import org.springframework.web.client.RestTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-import com.iskwhdys.project.Constans;
-import com.iskwhdys.project.domain.channel.ChannelEntity;
+import com.iskwhdys.project.infra.youtube.YoutubeApi;
 
+@Component
 public class ChannelSpecification {
 
-	private ChannelSpecification() {}
+	@Autowired
+	YoutubeApi youtubeApi;
 
-	public static ChannelEntity update(ChannelEntity channel, RestTemplate restTemplate) {
-		return update(channel, restTemplate, "snippet", "statistics");
+	public ChannelEntity update(ChannelEntity channel) {
+		return update(channel, "snippet", "statistics");
 	}
 
 	@SuppressWarnings("unchecked")
-	private static ChannelEntity update(ChannelEntity channel, RestTemplate restTemplate, String... parts) {
-		if(Constans.YOUTUBE_API_KEY == null || "".equals(Constans.YOUTUBE_API_KEY))	return channel;
-
-		String url = Constans.YOUTUBE_API_URL + "/channels?" + "id=" + channel.getId() + "&key="
-				+ Constans.YOUTUBE_API_KEY
-				+ "&part=" + String.join(",", parts);
-
-		var items = (List<Map<String, ?>>) restTemplate.getForObject(url, Map.class).get("items");
+	private ChannelEntity update(ChannelEntity channel, String... parts) {
+		var items = youtubeApi.downloadChannelItems(channel.getId(), parts);
 		if (items.isEmpty()) {
 			return channel;
 		}
@@ -39,7 +34,7 @@ public class ChannelSpecification {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static ChannelEntity setSnippet(ChannelEntity channel, Map<String, ?> map) {
+	private ChannelEntity setSnippet(ChannelEntity channel, Map<String, ?> map) {
 		if (map == null) return channel;
 		if (map.containsKey("title")) channel.setTitle(map.get("title").toString());
 		if (map.containsKey("description")) channel.setDescription(map.get("description").toString());
@@ -56,14 +51,12 @@ public class ChannelSpecification {
 		return channel;
 	}
 
-	private static ChannelEntity setStatistics(ChannelEntity channel, Map<String, ?> map) {
+	private ChannelEntity setStatistics(ChannelEntity channel, Map<String, ?> map) {
 		if (map == null) return channel;
 		if (map.containsKey("subscriberCount")) channel.setSubscriberCount(toInteger(map, "subscriberCount"));
 		return channel;
 	}
 
-	private static Integer toInteger(Map<String, ?> map, String key) {
-		return Integer.parseInt(map.get(key).toString());
-	}
+	private Integer toInteger(Map<String, ?> map, String key) { return Integer.parseInt(map.get(key).toString()); }
 
 }

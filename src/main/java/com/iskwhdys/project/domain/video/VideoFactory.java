@@ -3,21 +3,25 @@ package com.iskwhdys.project.domain.video;
 import java.util.Date;
 
 import org.jdom2.Element;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import com.iskwhdys.project.Common;
-import com.iskwhdys.project.infra.youtube.VideoApi;
+import com.iskwhdys.project.infra.youtube.YoutubeApi;
 
+@Component
 public class VideoFactory {
 
-	private VideoFactory() {}
+	@Autowired
+	YoutubeApi youtubeApi;
 
-	public static VideoEntity createViaXmlElement(Element entry) {
+	public VideoEntity createViaXmlElement(Element entry) {
 		var video = updateViaXmlElement(entry, new VideoEntity());
 		video.setCreateDate(new Date());
 		return video;
 	}
 
-	public static VideoEntity updateViaXmlElement(Element entry, VideoEntity entity) {
+	public VideoEntity updateViaXmlElement(Element entry, VideoEntity entity) {
 		entity.setUpdateDate(new Date());
 
 		Element group = null;
@@ -69,7 +73,7 @@ public class VideoFactory {
 			case "starRating":
 				int count = Integer.parseInt(element.getAttributeValue("count"));
 				String ave = element.getAttributeValue("average");
-				int like = VideoApi.getLikeCount(count, ave);
+				int like = youtubeApi.getLikeCount(count, ave);
 				int dislike = count - like;
 				entity.setLikes(like);
 				entity.setDislikes(dislike);

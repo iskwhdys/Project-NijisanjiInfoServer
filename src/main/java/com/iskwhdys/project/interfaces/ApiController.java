@@ -26,7 +26,6 @@ import com.iskwhdys.project.domain.channel.ChannelRepository;
 import com.iskwhdys.project.domain.video.VideoCardEntity;
 import com.iskwhdys.project.domain.video.VideoCardRepository;
 import com.iskwhdys.project.domain.video.VideoEntity;
-import com.iskwhdys.project.domain.video.VideoRepository;
 
 @CrossOrigin
 @Controller
@@ -34,8 +33,6 @@ public class ApiController {
 
 	@Autowired
 	ChannelRepository cr;
-	@Autowired
-	VideoRepository vr;
 	@Autowired
 	VideoCardRepository vcr;
 
