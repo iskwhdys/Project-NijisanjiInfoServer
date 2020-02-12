@@ -149,7 +149,7 @@ public class VideoService {
 		// 無効な動画は除外
 		if (Boolean.FALSE.equals(video.getEnabled())) return;
 		// 配信予定日時を過ぎてない動画 もしくは再生が0の動画は除外
-		if (video.getLiveSchedule().after(new Date()) || video.getViews() == 0) return;
+		if (new Date().getTime() < video.getLiveSchedule().getTime()) return;
 		// 配信予定日時が24時間を超えた動画は除外
 		if ((new Date().getTime() - video.getLiveSchedule().getTime()) > 1000 * 60 * 60 * 24) return;
 
