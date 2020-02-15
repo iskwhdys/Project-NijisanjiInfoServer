@@ -21,7 +21,7 @@ public class ChannelController {
   @ResponseBody
   @GetMapping(value = "/api/channel")
   public List<ChannelEntity> getChannels(Model model) {
-    return cr.findAll();
+    return cr.findByEnabledTrue();
 
   }
 

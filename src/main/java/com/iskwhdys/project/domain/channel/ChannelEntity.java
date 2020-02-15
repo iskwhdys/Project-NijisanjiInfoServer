@@ -20,6 +20,7 @@ public class ChannelEntity {
   private String description;
   private Integer subscriberCount;
   private String thumbnailUrl;
+  private Boolean enabled;
 
   public String toString() {
     return "Channel:[" + getId() + "] [" + getTitle() + "]";

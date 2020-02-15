@@ -42,7 +42,7 @@ public class VideoThumbnailService {
     if (Files.exists(resizePath)) {
       try {
         cache.put(videoId, Files.readAllBytes(resizePath));
-        log.info("Thumbnail-Read:" + videoId);
+        log.debug("Thumbnail-Read:" + videoId);
       } catch (IOException e) {
         throw new ResourceAccessException("File read error", e);
       }
@@ -54,7 +54,7 @@ public class VideoThumbnailService {
       throw new ResourceAccessException("Not found video id");
     }
 
-    log.info("Thumbnail-Dowmload:" + videoEntity.get().getTitle());
+    log.debug("Thumbnail-Dowmload:" + videoEntity.get().getTitle());
     boolean success = downloadThumbnails(videoEntity.get());
     if (!success) {
       throw new ResourceAccessException("Download error");

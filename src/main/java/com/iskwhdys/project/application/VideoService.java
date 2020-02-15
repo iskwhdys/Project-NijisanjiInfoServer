@@ -41,28 +41,35 @@ public class VideoService {
   @Autowired
   VideoSpecification videoApi;
 
-  public List<VideoEntity> update10min() {
 
-    // 全チャンネルID取得
-    List<String> channelIdList =
-        channelRepository.findAll().stream().map(ChannelEntity::getId).collect(Collectors.toList());
-    // チャンネルのRssXmlから動画情報Elementを取得
-    Map<String, Element> elements = ChannelFeedXml.getVideoElement(channelIdList);
+  public List<VideoEntity> update5min() {
+    return update(false, false);
+  }
+
+  public List<VideoEntity> update20min() {
+    return update(true, true);
+  }
+
+
+  private List<VideoEntity> update(boolean isUpdateLiveVideos, boolean isUpdateEccentricVideos) {
+
+    // 全チャンネルのRssXmlから動画情報Elementを取得
+    Map<String, Element> elements = ChannelFeedXml.getVideoElement(channelRepository
+        .findByEnabledTrue().stream().map(ChannelEntity::getId).collect(Collectors.toList()));
     List<VideoEntity> videos = new ArrayList<>();
 
     // 全動画情報Elementを元にEntityを作成 or 情報の更新
     for (var set : elements.entrySet()) {
-      String id = set.getKey();
       Element element = set.getValue();
 
-      var video = videoRepository.findById(id).orElse(null);
+      var video = videoRepository.findById(set.getKey()).orElse(null);
       if (video == null) {
         video = createNewVideo(element);
       } else if (video.isUpload() || video.isPremierUpload()) {
         updateUploadVideo(element, video);
       } else if (video.isLiveArchive()) {
         updateLiveArchiveVideo(element, video);
-      } else if (video.isPremierLive() || video.isLiveLive()) {
+      } else if (isUpdateLiveVideos && (video.isPremierLive() || video.isLiveLive())) {
         updateLiveVideo(element, video);
       } else if (video.isPremierReserve() || video.isLiveReserve()) {
         updateReserveVideo(element, video);
@@ -72,21 +79,45 @@ public class VideoService {
       videos.add(video);
     }
 
-    var videoIds = videos.stream().map(VideoEntity::getId).collect(Collectors.toList());
-    // XMLにないライブ情報の更新（非公開系？ライブ完了してホーム(XML)に公開されるまでの動画がここに来た）
-    for (var video : videoRepository.findByTypeInAndEnabledTrueAndIdNotInOrderByLiveStartDesc(
-        VideoEntity.TYPE_LIVES, videoIds)) {
-      updateXmlNotExitVideo(video);
-      videos.add(video);
+    if (isUpdateEccentricVideos) {
+      var videoIds = videos.stream().map(VideoEntity::getId).collect(Collectors.toList());
+      videos.addAll(updateNoXmlLives(videoIds));
+      videos.addAll(updateNoXmlTodayVideos(videoIds));
     }
-    // 24時間以内に公開された動画類でXMLに無いもの（ライブ終了直後でXMLに反映されてないもの）
-    for (var video : videoRepository.findByIdNotInAndTodayUploadVideoAndArchives(videoIds)) {
-      updatePrivateVideo(video);
-      videos.add(video);
-    }
+
     videoRepository.saveAll(videos);
     return videos;
   }
+
+  /**
+   * XMLにないライブ情報の更新（非公開系？ライブ完了してホーム(XML)に公開されるまでの動画がここに来た）
+   *
+   * @param videoIds
+   * @return
+   */
+  private List<VideoEntity> updateNoXmlLives(List<String> videoIds) {
+    var videos = videoRepository
+        .findByTypeInAndEnabledTrueAndIdNotInOrderByLiveStartDesc(VideoEntity.TYPE_LIVES, videoIds);
+    for (var video : videos) {
+      updateXmlNotExitVideo(video);
+    }
+    return videos;
+  }
+
+  /**
+   * 24時間以内に公開された動画類でXMLに無いもの（ライブ終了直後でXMLに反映されてないもの）
+   *
+   * @param videoIds
+   * @return
+   */
+  private List<VideoEntity> updateNoXmlTodayVideos(List<String> videoIds) {
+    var videos = videoRepository.findByIdNotInAndTodayUploadVideoAndArchives(videoIds);
+    for (var video : videos) {
+      updatePrivateVideo(video);
+    }
+    return videos;
+  }
+
 
   private VideoEntity createNewVideo(Element element) {
     var video = videoFactory.createViaXmlElement(element);
@@ -191,8 +222,7 @@ public class VideoService {
     var opt = videoRepository.findById(id);
     if (opt.isPresent()) {
       tweet(opt.get());
-    }
-    else {
+    } else {
       log.warn("Videoがありません。：" + id);
     }
   }

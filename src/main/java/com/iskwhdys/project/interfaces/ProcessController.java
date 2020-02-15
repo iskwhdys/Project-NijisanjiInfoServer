@@ -38,13 +38,23 @@ public class ProcessController {
   @Autowired
   YoutubeApi youtubeApi;
 
-  @Scheduled(cron = "0 3,13,23,33,43,53 * * * *", zone = "Asia/Tokyo")
-  public void cron10min() {
+  @Scheduled(cron = "0 3,5,10,15,25,30,35,45,50,55 * * * *", zone = "Asia/Tokyo")
+  public void cron5min() {
     if (youtubeApi.enabled()) {
-      log.info("cron10min " + new Date());
-      videoService.update10min();
+      log.info("cron5min " + new Date());
+      videoService.update5min();
     } else {
-      log.info("cron10min Disabled");
+      log.info("cron5min Disabled");
+    }
+  }
+
+  @Scheduled(cron = "0 0,20,40 * * * *", zone = "Asia/Tokyo")
+  public void cron20min() {
+    if (youtubeApi.enabled()) {
+      log.info("cron20min " + new Date());
+      videoService.update20min();
+    } else {
+      log.info("cron20min Disabled");
     }
   }
 
@@ -67,12 +77,16 @@ public class ProcessController {
     switch (name) {
 
       // 定期ジョブ
-      case "update10min":
-        videoService.update10min();
+      case "update5min":
+        videoService.update5min();
+        break;
+
+      case "update20min":
+        videoService.update20min();
         break;
 
       case "update1day":
-        videoService.update10min();
+        videoService.update20min();
         channelService.updateAll();
         break;
 
