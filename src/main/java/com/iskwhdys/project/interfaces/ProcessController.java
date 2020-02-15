@@ -14,6 +14,7 @@ import com.iskwhdys.project.application.ChannelService;
 import com.iskwhdys.project.application.VideoService;
 import com.iskwhdys.project.domain.channel.ChannelRepository;
 import com.iskwhdys.project.domain.video.VideoRepository;
+import com.iskwhdys.project.infra.youtube.YoutubeApi;
 import lombok.extern.slf4j.Slf4j;
 
 @Controller
@@ -34,21 +35,33 @@ public class ProcessController {
   @Autowired
   VideoService videoService;
 
+  @Autowired
+  YoutubeApi youtubeApi;
+
   @Scheduled(cron = "0 3,13,23,33,43,53 * * * *", zone = "Asia/Tokyo")
   public void cron10min() {
-    log.info("cron10min " + new Date());
-    videoService.update10min();
+    if (youtubeApi.enabled()) {
+      log.info("cron10min " + new Date());
+      videoService.update10min();
+    } else {
+      log.info("cron10min Disabled");
+    }
   }
 
   @Scheduled(cron = "0 45 16 * * *", zone = "Asia/Tokyo")
   public void cron1day() {
-    log.info("cron1day " + new Date());
-    channelService.updateAll();
+    if (youtubeApi.enabled()) {
+      log.info("cron1day " + new Date());
+      channelService.updateAll();
+    } else {
+      log.info("cron1day Disabled");
+    }
   }
 
   @ResponseBody
   @GetMapping(value = "/batch")
-  public String batch(@RequestParam("name") String name) {
+  public String batch(@RequestParam("name") String name,
+      @RequestParam(name = "value", required = false) String value) {
     log.info("process-start:" + name);
 
     switch (name) {
@@ -62,6 +75,10 @@ public class ProcessController {
         videoService.update10min();
         channelService.updateAll();
         break;
+
+//      case "tweet":
+//        videoService.tweet(value);
+//        break;
 
       default:
         return name;

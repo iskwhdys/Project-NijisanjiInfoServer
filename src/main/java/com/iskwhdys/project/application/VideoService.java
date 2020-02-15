@@ -17,6 +17,7 @@ import com.iskwhdys.project.domain.video.VideoRepository;
 import com.iskwhdys.project.domain.video.VideoSpecification;
 import com.iskwhdys.project.infra.twitter.TwitterApi;
 import com.iskwhdys.project.infra.youtube.ChannelFeedXml;
+import com.twitter.twittertext.TwitterTextParser;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -186,19 +187,58 @@ public class VideoService {
     log.info("Private ->" + video.getType() + " " + video.toString());
   }
 
-  private void tweet(VideoEntity video) {
-    var result = new StringBuilder();
-    result.append("～配信開始～\r\n");
-    var channel = channelRepository.findById(video.getChannelId());
-    if (channel.isPresent()) {
-      result.append(channel.get().getTitle() + "\r\n");
+  public void tweet(String id) {
+    var opt = videoRepository.findById(id);
+    if (opt.isPresent()) {
+      tweet(opt.get());
     }
-    result.append(video.getTitle() + "\r\n");
-    result.append("https://www.youtube.com/watch?v=" + video.getId() + "\r\n");
-    result.append("\r\n");
-    result.append("～その他の配信情報はこちら～\r\n");
-    result.append("にじさんじライブ新着 http://nijisanji-live.com");
-
-    twitterApi.tweet(result.toString());
+    else {
+      log.warn("Videoがありません。：" + id);
+    }
   }
+
+  private void tweet(VideoEntity video) {
+    String msg = getTweetMessage(video, true, true);
+    if (TwitterTextParser.parseTweet(msg).isValid) {
+      twitterApi.tweet(msg);
+      return;
+    }
+
+    msg = getTweetMessage(video, false, true);
+    if (TwitterTextParser.parseTweet(msg).isValid) {
+      twitterApi.tweet(msg);
+      return;
+    }
+
+    msg = getTweetMessage(video, false, false);
+    twitterApi.tweet(msg);
+  }
+
+  private String getTweetMessage(VideoEntity video, boolean useChannel, boolean use2j3jInfo) {
+    var result = new StringBuilder();
+    result.append("～配信開始～").append("\r\n");
+
+    if (useChannel) {
+      var channel = channelRepository.findById(video.getChannelId());
+      if (channel.isPresent()) {
+        result.append(channel.get().getTitle()).append("\r\n");
+      }
+    }
+
+    result.append(video.getTitle()).append("\r\n");
+    result.append("https://www.youtube.com/watch?v=" + video.getId());
+
+    if (use2j3jInfo) {
+      result.append("\r\n");
+      result.append("\r\n");
+      result.append("～その他の配信情報はこちら～\r\n");
+      result.append("にじさんじライブ新着 http://nijisanji-live.com");
+    }
+
+    return result.toString();
+
+  }
+
+
+
 }

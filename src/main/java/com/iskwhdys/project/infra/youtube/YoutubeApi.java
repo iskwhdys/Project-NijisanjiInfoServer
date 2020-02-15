@@ -19,6 +19,10 @@ public class YoutubeApi {
   @Value("${nis.api.youtube.videoKey}")
   String videoKey;
 
+  public boolean enabled() {
+    return !videoKey.isEmpty();
+  }
+
   @SuppressWarnings("unchecked")
   public List<Map<String, Object>> downloadChannelItems(String channelId, String... parts) {
     if (videoKey.isEmpty())

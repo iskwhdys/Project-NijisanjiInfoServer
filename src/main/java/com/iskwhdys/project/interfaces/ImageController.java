@@ -9,7 +9,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import com.iskwhdys.project.application.ChannelImageService;
 import com.iskwhdys.project.application.VideoThumbnailService;
@@ -23,8 +22,6 @@ public class ImageController {
   @Autowired
   ChannelImageService channelImageService;
 
-
-  @ResponseBody
   @GetMapping(value = "/video/{id}/thumbnail_mini")
   public ResponseEntity<byte[]> geThumbnailMini(@PathVariable("id") String id, Model model) {
     var bytes = videoThumbnailService.getThumbnailMini(id);
@@ -34,7 +31,6 @@ public class ImageController {
     return new ResponseEntity<>(bytes, headers, HttpStatus.OK);
   }
 
-  @ResponseBody
   @GetMapping(value = "/channel/{id}/thumbnail")
   public ResponseEntity<byte[]> getChannelThumbnail(@PathVariable("id") String id, Model model) {
     var bytes = channelImageService.getThumbnail(id);
@@ -44,7 +40,6 @@ public class ImageController {
     return new ResponseEntity<>(bytes, headers, HttpStatus.OK);
   }
 
-  @ResponseBody
   @GetMapping(value = "/channel/{id}/thumbnail_mini")
   public ResponseEntity<byte[]> getChannelThumbnailMini(@PathVariable("id") String id,
       Model model) {
