@@ -3,6 +3,7 @@ package com.iskwhdys.project.infra.youtube;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -25,29 +26,39 @@ public class YoutubeApi {
 
   @SuppressWarnings("unchecked")
   public List<Map<String, Object>> downloadChannelItems(String channelId, String... parts) {
-    if (videoKey.isEmpty())
-      return new ArrayList<>();
+    if (videoKey.isEmpty()) return new ArrayList<>();
 
-    String url = URL_BASE + "/channels?" + "id=" + channelId + "&key=" + videoKey + "&part="
-        + String.join(",", parts);
+    String url =
+        URL_BASE
+            + "/channels?"
+            + "id="
+            + channelId
+            + "&key="
+            + videoKey
+            + "&part="
+            + String.join(",", parts);
 
     var items = restTemplate.getForObject(url, Map.class).get("items");
     return (List<Map<String, Object>>) items;
   }
-
 
   @SuppressWarnings("unchecked")
   public List<Map<String, Object>> downloadVideoItems(String videoId, String... parts) {
-    if (videoKey.isEmpty())
-      return new ArrayList<>();
+    if (videoKey.isEmpty()) return new ArrayList<>();
 
-    String url = URL_BASE + "/videos?" + "id=" + videoId + "&key=" + videoKey + "&part="
-        + String.join(",", parts);
+    String url =
+        URL_BASE
+            + "/videos?"
+            + "id="
+            + videoId
+            + "&key="
+            + videoKey
+            + "&part="
+            + String.join(",", parts);
 
     var items = restTemplate.getForObject(url, Map.class).get("items");
     return (List<Map<String, Object>>) items;
   }
-
 
   public int getLikeCount(int count, String strStarAve) {
     int starAve = Integer.parseInt(strStarAve.replace(".", ""));
@@ -65,5 +76,4 @@ public class YoutubeApi {
 
     return 0;
   }
-
 }

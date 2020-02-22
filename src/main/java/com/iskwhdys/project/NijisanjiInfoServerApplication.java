@@ -9,5 +9,4 @@ public class NijisanjiInfoServerApplication {
   public static void main(String[] args) {
     SpringApplication.run(NijisanjiInfoServerApplication.class, args);
   }
-
 }

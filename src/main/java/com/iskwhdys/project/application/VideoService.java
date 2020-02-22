@@ -5,10 +5,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
 import org.jdom2.Element;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import com.iskwhdys.project.domain.channel.ChannelEntity;
 import com.iskwhdys.project.domain.channel.ChannelRepository;
 import com.iskwhdys.project.domain.video.VideoEntity;
@@ -18,6 +20,7 @@ import com.iskwhdys.project.domain.video.VideoSpecification;
 import com.iskwhdys.project.infra.twitter.TwitterApi;
 import com.iskwhdys.project.infra.youtube.ChannelFeedXml;
 import com.twitter.twittertext.TwitterTextParser;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -25,22 +28,15 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class VideoService {
 
-  @Autowired
-  ChannelRepository channelRepository;
-  @Autowired
-  VideoRepository videoRepository;
-  @Autowired
-  VideoThumbnailService videoThumbnailService;
+  @Autowired ChannelRepository channelRepository;
+  @Autowired VideoRepository videoRepository;
+  @Autowired VideoThumbnailService videoThumbnailService;
 
-  @Autowired
-  VideoFactory videoFactory;
+  @Autowired VideoFactory videoFactory;
 
-  @Autowired
-  TwitterApi twitterApi;
+  @Autowired TwitterApi twitterApi;
 
-  @Autowired
-  VideoSpecification videoApi;
-
+  @Autowired VideoSpecification videoApi;
 
   public List<VideoEntity> update5min() {
     return update(false, false);
@@ -50,12 +46,16 @@ public class VideoService {
     return update(true, true);
   }
 
-
   private List<VideoEntity> update(boolean isUpdateLiveVideos, boolean isUpdateEccentricVideos) {
 
     // 全チャンネルのRssXmlから動画情報Elementを取得
-    Map<String, Element> elements = ChannelFeedXml.getVideoElement(channelRepository
-        .findByEnabledTrue().stream().map(ChannelEntity::getId).collect(Collectors.toList()));
+    Map<String, Element> elements =
+        ChannelFeedXml.getVideoElement(
+            channelRepository
+                .findByEnabledTrue()
+                .stream()
+                .map(ChannelEntity::getId)
+                .collect(Collectors.toList()));
     List<VideoEntity> videos = new ArrayList<>();
 
     // 全動画情報Elementを元にEntityを作成 or 情報の更新
@@ -96,8 +96,9 @@ public class VideoService {
    * @return
    */
   private List<VideoEntity> updateNoXmlLives(List<String> videoIds) {
-    var videos = videoRepository
-        .findByTypeInAndEnabledTrueAndIdNotInOrderByLiveStartDesc(VideoEntity.TYPE_LIVES, videoIds);
+    var videos =
+        videoRepository.findByTypeInAndEnabledTrueAndIdNotInOrderByLiveStartDesc(
+            VideoEntity.TYPE_LIVES, videoIds);
     for (var video : videos) {
       updateXmlNotExitVideo(video);
     }
@@ -117,7 +118,6 @@ public class VideoService {
     }
     return videos;
   }
-
 
   private VideoEntity createNewVideo(Element element) {
     var video = videoFactory.createViaXmlElement(element);
@@ -176,14 +176,11 @@ public class VideoService {
     video.setEnabled(success);
 
     // 無効な動画は除外
-    if (Boolean.FALSE.equals(video.getEnabled()))
-      return;
+    if (Boolean.FALSE.equals(video.getEnabled())) return;
     // 配信予定日時を過ぎてない動画 もしくは再生が0の動画は除外
-    if (new Date().getTime() < video.getLiveSchedule().getTime())
-      return;
+    if (new Date().getTime() < video.getLiveSchedule().getTime()) return;
     // 配信予定日時が24時間を超えた動画は除外
-    if ((new Date().getTime() - video.getLiveSchedule().getTime()) > 1000 * 60 * 60 * 24)
-      return;
+    if ((new Date().getTime() - video.getLiveSchedule().getTime()) > 1000 * 60 * 60 * 24) return;
 
     videoApi.updateReserveInfoViaApi(video);
     if (video.isPremierUpload() || video.isLiveArchive()) {
@@ -266,9 +263,5 @@ public class VideoService {
     }
 
     return result.toString();
-
   }
-
-
-
 }

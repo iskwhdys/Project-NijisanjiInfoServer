@@ -7,23 +7,24 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
+
 import com.iskwhdys.project.domain.channel.ChannelEntity;
 import com.iskwhdys.project.domain.channel.ChannelRepository;
 import com.iskwhdys.project.infra.util.ImageEditor;
-import lombok.extern.slf4j.Slf4j;
 
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
 public class ChannelImageService {
 
-  @Autowired
-  ChannelRepository cr;
+  @Autowired ChannelRepository cr;
 
   @Value("${nis.path.image.channel}")
   String thumbnailPath;
@@ -77,7 +78,6 @@ public class ChannelImageService {
     return cache.get(key);
   }
 
-
   public boolean downloadThumbnail(ChannelEntity entity) {
     try {
       var dirPath = Paths.get(thumbnailPath);
@@ -98,6 +98,4 @@ public class ChannelImageService {
     }
     return true;
   }
-
-
 }

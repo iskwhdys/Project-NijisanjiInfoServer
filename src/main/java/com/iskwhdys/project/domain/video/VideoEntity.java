@@ -2,9 +2,11 @@ package com.iskwhdys.project.domain.video;
 
 import java.util.Date;
 import java.util.List;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,8 +18,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class VideoEntity {
 
-  @Id
-  private String id;
+  @Id private String id;
   private String channelId;
   private String title;
   private String description;
@@ -88,5 +89,4 @@ public class VideoEntity {
   public String toString() {
     return "Video:[" + getId() + "] [" + getTitle() + "]";
   }
-
 }

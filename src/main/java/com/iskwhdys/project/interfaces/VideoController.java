@@ -3,6 +3,7 @@ package com.iskwhdys.project.interfaces;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
 import com.iskwhdys.project.Common;
 import com.iskwhdys.project.domain.video.VideoEntity;
 import com.iskwhdys.project.domain.video.VideoRepository;
@@ -19,8 +21,7 @@ import com.iskwhdys.project.domain.video.VideoRepository;
 @RequestMapping("/api/video")
 public class VideoController {
 
-  @Autowired
-  VideoRepository vr;
+  @Autowired VideoRepository vr;
 
   @GetMapping(value = "/live")
   public List<VideoEntity> getsLive(@RequestParam(name = "mode") String mode) {
@@ -31,12 +32,14 @@ public class VideoController {
   }
 
   @GetMapping(value = "/upload")
-  public List<VideoEntity> getUpload(@RequestParam(name = "mode") String mode,
+  public List<VideoEntity> getUpload(
+      @RequestParam(name = "mode") String mode,
       @RequestParam(name = "from", required = false) String from) {
 
     if ("new".equals(mode)) {
       return vr.findByEnabledTrueAndTypeInAndUploadDateBetweenOrderByUploadDateDesc(
-          VideoEntity.TYPE_UPLOADS, new Date(new Date().getTime() - (1000 * 60 * 60 * 24 * 2)),
+          VideoEntity.TYPE_UPLOADS,
+          new Date(new Date().getTime() - (1000 * 60 * 60 * 24 * 2)),
           new Date());
     } else if ("get".equals(mode)) {
       return vr.findTop10ByEnabledTrueAndTypeInAndUploadDateBeforeOrderByUploadDateDesc(
@@ -46,12 +49,14 @@ public class VideoController {
   }
 
   @GetMapping(value = "/archive")
-  public List<VideoEntity> getArchive(@RequestParam(name = "mode") String mode,
+  public List<VideoEntity> getArchive(
+      @RequestParam(name = "mode") String mode,
       @RequestParam(name = "from", required = false) String from) {
 
     if ("new".equals(mode)) {
       return vr.findByEnabledTrueAndTypeEqualsAndLiveStartBetweenOrderByLiveStartDesc(
-          VideoEntity.TYPE_LIVE_ARCHIVE, new Date(new Date().getTime() - (1000 * 60 * 60 * 24 * 1)),
+          VideoEntity.TYPE_LIVE_ARCHIVE,
+          new Date(new Date().getTime() - (1000 * 60 * 60 * 24 * 1)),
           new Date());
     } else if ("get".equals(mode)) {
       return vr.findTop30ByEnabledTrueAndTypeEqualsAndLiveStartBeforeOrderByLiveStartDesc(
@@ -61,7 +66,8 @@ public class VideoController {
   }
 
   @GetMapping(value = "/premier")
-  public List<VideoEntity> getPremier(@RequestParam(name = "mode") String mode,
+  public List<VideoEntity> getPremier(
+      @RequestParam(name = "mode") String mode,
       @RequestParam(name = "from", required = false) String from) {
 
     if ("new".equals(mode)) {
@@ -77,12 +83,14 @@ public class VideoController {
   }
 
   @GetMapping(value = "/schedule")
-  public List<VideoEntity> getSchedule(@RequestParam(name = "mode") String mode,
+  public List<VideoEntity> getSchedule(
+      @RequestParam(name = "mode") String mode,
       @RequestParam(name = "from", required = false) String from) {
 
     if ("new".equals(mode)) {
       return vr.findByEnabledTrueAndTypeEqualsAndLiveScheduleBetweenOrderByLiveSchedule(
-          VideoEntity.TYPE_LIVE_RESERVE, new Date(new Date().getTime() - (1000 * 60 * 60 * 24 * 1)),
+          VideoEntity.TYPE_LIVE_RESERVE,
+          new Date(new Date().getTime() - (1000 * 60 * 60 * 24 * 1)),
           new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 2)));
     } else if ("get".equals(mode)) {
       return vr.findTop30ByEnabledTrueAndTypeEqualsAndLiveScheduleAfterOrderByLiveSchedule(
@@ -96,5 +104,4 @@ public class VideoController {
     return vr.findTop10ByEnabledTrueAndChannelIdEqualsAndUploadDateBeforeOrderByUploadDateDesc(
         channelId, new Date());
   }
-
 }

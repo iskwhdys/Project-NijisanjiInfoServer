@@ -3,8 +3,10 @@ package com.iskwhdys.project.domain.video;
 import java.time.Duration;
 import java.util.Date;
 import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import com.iskwhdys.project.Common;
 import com.iskwhdys.project.infra.youtube.YoutubeApi;
 
@@ -12,11 +14,11 @@ import com.iskwhdys.project.infra.youtube.YoutubeApi;
 @SuppressWarnings("squid:S1192")
 public class VideoSpecification {
 
-  @Autowired
-  YoutubeApi youtubeApi;
+  @Autowired YoutubeApi youtubeApi;
 
   public VideoEntity updateEntity(VideoEntity entity) {
-    return updateBaseFunction(entity, "snippet", "statistics", "contentDetails", "liveStreamingDetails", "status");
+    return updateBaseFunction(
+        entity, "snippet", "statistics", "contentDetails", "liveStreamingDetails", "status");
   }
 
   public VideoEntity updateLiveInfoViaApi(VideoEntity entity) {
@@ -83,8 +85,10 @@ public class VideoSpecification {
     if (map == null) return video;
     if (map.containsKey("actualStartTime")) video.setLiveStart(toDate(map, "actualStartTime"));
     if (map.containsKey("actualEndTime")) video.setLiveEnd(toDate(map, "actualEndTime"));
-    if (map.containsKey("scheduledStartTime")) video.setLiveSchedule(toDate(map, "scheduledStartTime"));
-    if (map.containsKey("concurrentViewers")) video.setLiveViews(toInteger(map, "concurrentViewers"));
+    if (map.containsKey("scheduledStartTime"))
+      video.setLiveSchedule(toDate(map, "scheduledStartTime"));
+    if (map.containsKey("concurrentViewers"))
+      video.setLiveViews(toInteger(map, "concurrentViewers"));
     return video;
   }
 
@@ -94,9 +98,13 @@ public class VideoSpecification {
     return video;
   }
 
-  private Date toDate(Map<String, ?> map, String key) { return Common.youtubeTimeToDate(map.get(key).toString()); }
+  private Date toDate(Map<String, ?> map, String key) {
+    return Common.youtubeTimeToDate(map.get(key).toString());
+  }
 
-  private Integer toInteger(Map<String, ?> map, String key) { return Integer.parseInt(map.get(key).toString()); }
+  private Integer toInteger(Map<String, ?> map, String key) {
+    return Integer.parseInt(map.get(key).toString());
+  }
 
   @SuppressWarnings("squid:S3776")
   public String getType(VideoEntity video) {
@@ -110,32 +118,41 @@ public class VideoSpecification {
         } else {
           if (video.getLiveStart() == null && video.getLiveEnd() == null)
             return VideoEntity.TYPE_PREMIER_RESERVE;
-          if (video.getLiveStart() != null && video.getLiveEnd() == null) return VideoEntity.TYPE_LIVE_LIVE;
+          if (video.getLiveStart() != null && video.getLiveEnd() == null)
+            return VideoEntity.TYPE_LIVE_LIVE;
           if (video.getLiveStart() != null && video.getLiveEnd() != null)
             return VideoEntity.TYPE_LIVE_ARCHIVE;
         }
       }
       if ("uploaded".equals(video.getUploadStatus())) {
-        if (video.getLiveStart() == null && video.getLiveEnd() == null) return VideoEntity.TYPE_LIVE_RESERVE;
-        if (video.getLiveStart() != null && video.getLiveEnd() == null) return VideoEntity.TYPE_LIVE_LIVE;
-        if (video.getLiveStart() != null && video.getLiveEnd() != null) return VideoEntity.TYPE_LIVE_ARCHIVE;
+        if (video.getLiveStart() == null && video.getLiveEnd() == null)
+          return VideoEntity.TYPE_LIVE_RESERVE;
+        if (video.getLiveStart() != null && video.getLiveEnd() == null)
+          return VideoEntity.TYPE_LIVE_LIVE;
+        if (video.getLiveStart() != null && video.getLiveEnd() != null)
+          return VideoEntity.TYPE_LIVE_ARCHIVE;
       }
     } else {
       // 2回目以降
       if (video.getType().startsWith("Premier")) {
-        if (video.getLiveStart() == null && video.getLiveEnd() == null) return VideoEntity.TYPE_PREMIER_RESERVE;
-        if (video.getLiveStart() != null && video.getLiveEnd() == null) return VideoEntity.TYPE_PREMIER_LIVE;
-        if (video.getLiveStart() != null && video.getLiveEnd() != null) return VideoEntity.TYPE_PREMIER_UPLOAD;
+        if (video.getLiveStart() == null && video.getLiveEnd() == null)
+          return VideoEntity.TYPE_PREMIER_RESERVE;
+        if (video.getLiveStart() != null && video.getLiveEnd() == null)
+          return VideoEntity.TYPE_PREMIER_LIVE;
+        if (video.getLiveStart() != null && video.getLiveEnd() != null)
+          return VideoEntity.TYPE_PREMIER_UPLOAD;
       }
       if (video.getType().startsWith("Live")) {
-        if (video.getLiveStart() == null && video.getLiveEnd() == null) return VideoEntity.TYPE_LIVE_RESERVE;
-        if (video.getLiveStart() != null && video.getLiveEnd() == null) return VideoEntity.TYPE_LIVE_LIVE;
-        if (video.getLiveStart() != null && video.getLiveEnd() != null) return VideoEntity.TYPE_LIVE_ARCHIVE;
+        if (video.getLiveStart() == null && video.getLiveEnd() == null)
+          return VideoEntity.TYPE_LIVE_RESERVE;
+        if (video.getLiveStart() != null && video.getLiveEnd() == null)
+          return VideoEntity.TYPE_LIVE_LIVE;
+        if (video.getLiveStart() != null && video.getLiveEnd() != null)
+          return VideoEntity.TYPE_LIVE_ARCHIVE;
       }
 
       return video.getType();
     }
     return VideoEntity.TYPE_UNKNOWN;
   }
-
 }

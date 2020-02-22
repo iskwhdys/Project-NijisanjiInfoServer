@@ -1,6 +1,7 @@
 package com.iskwhdys.project.interfaces;
 
 import java.util.Date;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -10,11 +11,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestTemplate;
+
 import com.iskwhdys.project.application.ChannelService;
 import com.iskwhdys.project.application.VideoService;
 import com.iskwhdys.project.domain.channel.ChannelRepository;
 import com.iskwhdys.project.domain.video.VideoRepository;
 import com.iskwhdys.project.infra.youtube.YoutubeApi;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Controller
@@ -25,18 +28,13 @@ public class ProcessController {
 
   RestTemplate restTemplate = new RestTemplate();
 
-  @Autowired
-  ChannelRepository channelRepository;
-  @Autowired
-  VideoRepository videoRepository;
+  @Autowired ChannelRepository channelRepository;
+  @Autowired VideoRepository videoRepository;
 
-  @Autowired
-  ChannelService channelService;
-  @Autowired
-  VideoService videoService;
+  @Autowired ChannelService channelService;
+  @Autowired VideoService videoService;
 
-  @Autowired
-  YoutubeApi youtubeApi;
+  @Autowired YoutubeApi youtubeApi;
 
   @Scheduled(cron = "0 3,5,10,15,25,30,35,45,50,55 * * * *", zone = "Asia/Tokyo")
   public void cron5min() {
@@ -70,13 +68,14 @@ public class ProcessController {
 
   @ResponseBody
   @GetMapping(value = "/batch")
-  public String batch(@RequestParam("name") String name,
+  public String batch(
+      @RequestParam("name") String name,
       @RequestParam(name = "value", required = false) String value) {
     log.info("process-start:" + name);
 
     switch (name) {
 
-      // 定期ジョブ
+        // 定期ジョブ
       case "update5min":
         videoService.update5min();
         break;
@@ -90,9 +89,9 @@ public class ProcessController {
         channelService.updateAll();
         break;
 
-//      case "tweet":
-//        videoService.tweet(value);
-//        break;
+        //      case "tweet":
+        //        videoService.tweet(value);
+        //        break;
 
       default:
         return name;
@@ -101,5 +100,4 @@ public class ProcessController {
     log.info("process-end:" + name);
     return "Complate:" + name;
   }
-
 }

@@ -6,10 +6,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
 import org.springframework.web.client.RestTemplate;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -50,8 +52,11 @@ public class ChannelFeedXml {
       return null;
     }
 
-    var entries = root.getChildren().stream().filter(p -> p.getName().contains("entry"))
-        .collect(Collectors.toList());
+    var entries =
+        root.getChildren()
+            .stream()
+            .filter(p -> p.getName().contains("entry"))
+            .collect(Collectors.toList());
 
     var map = new HashMap<String, Element>();
     for (var element : entries) {
@@ -64,5 +69,4 @@ public class ChannelFeedXml {
     }
     return map;
   }
-
 }

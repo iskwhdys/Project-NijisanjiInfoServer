@@ -1,9 +1,11 @@
 package com.iskwhdys.project.application;
 
 import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import com.iskwhdys.project.domain.channel.ChannelEntity;
 import com.iskwhdys.project.domain.channel.ChannelRepository;
 import com.iskwhdys.project.domain.channel.ChannelSpecification;
@@ -12,14 +14,11 @@ import com.iskwhdys.project.domain.channel.ChannelSpecification;
 @Transactional
 public class ChannelService {
 
-  @Autowired
-  ChannelRepository channelRepository;
+  @Autowired ChannelRepository channelRepository;
 
-  @Autowired
-  ChannelImageService channelImageService;
+  @Autowired ChannelImageService channelImageService;
 
-  @Autowired
-  ChannelSpecification channelSpecification;
+  @Autowired ChannelSpecification channelSpecification;
 
   public ChannelEntity createOrUpdate(String id) {
     var channel = channelRepository.findById(id).orElse(null);
@@ -47,5 +46,4 @@ public class ChannelService {
     channelRepository.saveAll(channels);
     return channels;
   }
-
 }

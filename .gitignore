@@ -32,3 +32,4 @@ build/
 /ScrapBook.jpage
 /logs/
 /data/
+.DS_Store

@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageWriteParam;
@@ -61,9 +62,15 @@ public class ImageEditor {
   private static BufferedImage resizeImage(final BufferedImage image, int width, int height) {
 
     BufferedImage resizedImage = new BufferedImage(width, height, image.getType());
-    resizedImage.getGraphics().drawImage(
-        image.getScaledInstance(width, height, java.awt.Image.SCALE_AREA_AVERAGING), 0, 0, width,
-        height, null);
+    resizedImage
+        .getGraphics()
+        .drawImage(
+            image.getScaledInstance(width, height, java.awt.Image.SCALE_AREA_AVERAGING),
+            0,
+            0,
+            width,
+            height,
+            null);
 
     return resizedImage;
   }
@@ -77,5 +84,4 @@ public class ImageEditor {
 
     return resizedImage;
   }
-
 }

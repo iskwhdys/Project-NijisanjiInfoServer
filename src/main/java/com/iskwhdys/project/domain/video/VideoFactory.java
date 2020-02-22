@@ -1,17 +1,18 @@
 package com.iskwhdys.project.domain.video;
 
 import java.util.Date;
+
 import org.jdom2.Element;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import com.iskwhdys.project.Common;
 import com.iskwhdys.project.infra.youtube.YoutubeApi;
 
 @Component
 public class VideoFactory {
 
-  @Autowired
-  YoutubeApi youtubeApi;
+  @Autowired YoutubeApi youtubeApi;
 
   public VideoEntity createViaXmlElement(Element entry) {
     var video = updateViaXmlElement(entry, new VideoEntity());
@@ -44,8 +45,7 @@ public class VideoFactory {
           break;
       }
     }
-    if (group == null)
-      return entity;
+    if (group == null) return entity;
 
     Element community = null;
     for (Element element : group.getChildren()) {
@@ -63,8 +63,7 @@ public class VideoFactory {
           break;
       }
     }
-    if (community == null)
-      return entity;
+    if (community == null) return entity;
 
     for (Element element : community.getChildren()) {
       switch (element.getName()) {
@@ -86,5 +85,4 @@ public class VideoFactory {
 
     return entity;
   }
-
 }

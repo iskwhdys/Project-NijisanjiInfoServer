@@ -7,23 +7,24 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
+
 import com.iskwhdys.project.domain.video.VideoEntity;
 import com.iskwhdys.project.domain.video.VideoRepository;
 import com.iskwhdys.project.infra.util.ImageEditor;
-import lombok.extern.slf4j.Slf4j;
 
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
 public class VideoThumbnailService {
 
-  @Autowired
-  VideoRepository vr;
+  @Autowired VideoRepository vr;
 
   @Value("${nis.path.image.thunbnail}")
   String thumbnailPath;
@@ -90,6 +91,4 @@ public class VideoThumbnailService {
     }
     return true;
   }
-
-
 }

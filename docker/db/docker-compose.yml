@@ -1,4 +1,4 @@
-version: '2'
+version: "2"
 services:
   db-storage:
     image: iskwhdys/2j3j_db_storage
@@ -12,8 +12,6 @@ services:
       - 15432:5432
     volumes_from:
       - db-storage
-    networks:
-          - 2j3j-network
 networks:
   2j3j-network:
     external: true
