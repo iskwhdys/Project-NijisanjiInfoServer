@@ -3,6 +3,7 @@ package com.iskwhdys.project.interfaces;
 import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
@@ -66,14 +67,25 @@ public class ProcessController {
     }
   }
 
+
+  @Value("${spring.datasource.password}")
+  String password;
+
   @ResponseBody
   @GetMapping(value = "/batch")
   public String batch(
-      @RequestParam("name") String name,
-      @RequestParam(name = "value", required = false) String value) {
+      @RequestParam String name,
+      @RequestParam String pass,
+      @RequestParam(required = false) String value) {
     log.info("process-start:" + name);
 
+    if(!password.equals(pass)) {
+        return "error:" + name;
+    }
+
     switch (name) {
+      case "test":
+        break;
 
         // 定期ジョブ
       case "update5min":
