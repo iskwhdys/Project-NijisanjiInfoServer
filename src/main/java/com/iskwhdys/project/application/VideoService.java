@@ -63,8 +63,8 @@ public class VideoService {
         updateUploadVideo(element, video);
       } else if (video.isLiveArchive()) {
         updateLiveArchiveVideo(element, video);
-      } else if (isUpdateLiveVideos && (video.isPremierLive() || video.isLiveLive())) {
-        updateLiveVideo(element, video);
+      } else if (video.isPremierLive() || video.isLiveLive()) {
+        updateLiveVideo(element, video, isUpdateLiveVideos);
       } else if (video.isPremierReserve() || video.isLiveReserve()) {
         updateReserveVideo(element, video);
       } else if (video.isUnknown()) {
@@ -73,11 +73,9 @@ public class VideoService {
       videos.add(video);
     }
 
-    if (isUpdateEccentricVideos) {
-      var videoIds = videos.stream().map(VideoEntity::getId).collect(Collectors.toList());
-      videos.addAll(updateNoXmlLives(videoIds));
-      videos.addAll(updateNoXmlTodayVideos(videoIds));
-    }
+    var videoIds = videos.stream().map(VideoEntity::getId).collect(Collectors.toList());
+    videos.addAll(updateNoXmlLives(videoIds, isUpdateEccentricVideos));
+    videos.addAll(updateNoXmlTodayVideos(videoIds));
 
     videoRepository.saveAll(videos);
     return videos;
@@ -97,12 +95,13 @@ public class VideoService {
    * @param videoIds
    * @return
    */
-  private List<VideoEntity> updateNoXmlLives(List<String> videoIds) {
+  private List<VideoEntity> updateNoXmlLives(
+      List<String> videoIds, boolean isUpdateEccentricVideos) {
     var videos =
         videoRepository.findByTypeInAndEnabledTrueAndIdNotInOrderByLiveStartDesc(
             VideoEntity.TYPE_LIVES, videoIds);
     for (var video : videos) {
-      updateXmlNotExitVideo(video);
+      updateXmlNotExitVideo(video, isUpdateEccentricVideos);
     }
     return videos;
   }
@@ -159,16 +158,20 @@ public class VideoService {
     }
   }
 
-  private void updateLiveVideo(Element element, VideoEntity video) {
+  private void updateLiveVideo(Element element, VideoEntity video, boolean isUpdateLiveVideos) {
 
     videoFactory.updateViaXmlElement(element, video);
     videoThumbnailService.downloadThumbnails(video);
-    videoApi.updateLiveInfoViaApi(video);
 
-    if (video.isPremierUpload() || video.isLiveArchive()) {
-      videoApi.updateLiveToArchiveInfoViaApi(video);
+    if (isUpdateLiveVideos) {
+      videoApi.updateLiveInfoViaApi(video);
+      if (video.isPremierUpload() || video.isLiveArchive()) {
+        videoApi.updateLiveToArchiveInfoViaApi(video);
+      }
+      log.info("API Live -> " + video.getType() + " " + video.toString());
+    } else {
+      log.info("XML Live -> " + video.getType() + " " + video.toString());
     }
-    log.info("API Live -> " + video.getType() + " " + video.toString());
   }
 
   private void updateReserveVideo(Element element, VideoEntity video) {
@@ -201,10 +204,10 @@ public class VideoService {
     log.info("API Unknown -> " + video.getType() + " " + video.toString());
   }
 
-  private void updateXmlNotExitVideo(VideoEntity video) {
+  private void updateXmlNotExitVideo(VideoEntity video, boolean isUpdateEccentricVideos) {
     boolean success = videoThumbnailService.downloadThumbnails(video);
     video.setEnabled(success);
-    if (success) {
+    if (success && isUpdateEccentricVideos) {
       videoApi.updateEntity(video);
       log.info("API None ->" + video.getType() + " " + video.toString());
     } else {

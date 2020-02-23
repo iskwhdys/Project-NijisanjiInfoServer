@@ -10,8 +10,11 @@ import org.springframework.stereotype.Component;
 import com.iskwhdys.project.Common;
 import com.iskwhdys.project.infra.youtube.YoutubeApi;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Component
 @SuppressWarnings("squid:S1192")
+@Slf4j
 public class VideoSpecification {
 
   @Autowired YoutubeApi youtubeApi;
@@ -116,6 +119,10 @@ public class VideoSpecification {
             return VideoEntity.TYPE_LIVE_ARCHIVE;
           return VideoEntity.TYPE_UPLOAD;
         } else {
+          if (video.getLiveSchedule().getTime() < video.getCreateDate().getTime()) {
+            showDebug(video);
+            if (getPremierType(video) != null) return getPremierType(video);
+          }
           if (video.getLiveStart() == null && video.getLiveEnd() == null)
             return VideoEntity.TYPE_PREMIER_RESERVE;
           if (video.getLiveStart() != null && video.getLiveEnd() == null)
@@ -124,35 +131,52 @@ public class VideoSpecification {
             return VideoEntity.TYPE_LIVE_ARCHIVE;
         }
       }
-      if ("uploaded".equals(video.getUploadStatus())) {
-        if (video.getLiveStart() == null && video.getLiveEnd() == null)
-          return VideoEntity.TYPE_LIVE_RESERVE;
-        if (video.getLiveStart() != null && video.getLiveEnd() == null)
-          return VideoEntity.TYPE_LIVE_LIVE;
-        if (video.getLiveStart() != null && video.getLiveEnd() != null)
-          return VideoEntity.TYPE_LIVE_ARCHIVE;
+      if ("uploaded".equals(video.getUploadStatus()) && getLiveType(video) != null) {
+        return getLiveType(video);
       }
     } else {
       // 2回目以降
-      if (video.getType().startsWith("Premier")) {
-        if (video.getLiveStart() == null && video.getLiveEnd() == null)
-          return VideoEntity.TYPE_PREMIER_RESERVE;
-        if (video.getLiveStart() != null && video.getLiveEnd() == null)
-          return VideoEntity.TYPE_PREMIER_LIVE;
-        if (video.getLiveStart() != null && video.getLiveEnd() != null)
-          return VideoEntity.TYPE_PREMIER_UPLOAD;
+      if (video.getType().startsWith("Premier") && getPremierType(video) != null) {
+        return getPremierType(video);
       }
-      if (video.getType().startsWith("Live")) {
-        if (video.getLiveStart() == null && video.getLiveEnd() == null)
-          return VideoEntity.TYPE_LIVE_RESERVE;
-        if (video.getLiveStart() != null && video.getLiveEnd() == null)
-          return VideoEntity.TYPE_LIVE_LIVE;
-        if (video.getLiveStart() != null && video.getLiveEnd() != null)
-          return VideoEntity.TYPE_LIVE_ARCHIVE;
+      if (video.getType().startsWith("Live") && getLiveType(video) != null) {
+        return getLiveType(video);
       }
 
       return video.getType();
     }
     return VideoEntity.TYPE_UNKNOWN;
+  }
+
+  private void showDebug(VideoEntity video) {
+    log.info("深海の雨森");
+    log.info("getCreateDate" + video.getCreateDate());
+    log.info("getUpdateDate" + video.getUpdateDate());
+    log.info("getUploadDate" + video.getUploadDate());
+    log.info("getLiveSchedule" + video.getLiveSchedule());
+    log.info("getLiveStart" + video.getLiveStart());
+    log.info("getLiveEnd" + video.getLiveEnd());
+  }
+
+  private String getPremierType(VideoEntity video) {
+    if (video.getLiveStart() == null && video.getLiveEnd() == null)
+      return VideoEntity.TYPE_PREMIER_RESERVE;
+    if (video.getLiveStart() != null && video.getLiveEnd() == null)
+      return VideoEntity.TYPE_PREMIER_LIVE;
+    if (video.getLiveStart() != null && video.getLiveEnd() != null)
+      return VideoEntity.TYPE_PREMIER_UPLOAD;
+
+    return null;
+  }
+
+  private String getLiveType(VideoEntity video) {
+    if (video.getLiveStart() == null && video.getLiveEnd() == null)
+      return VideoEntity.TYPE_LIVE_RESERVE;
+    if (video.getLiveStart() != null && video.getLiveEnd() == null)
+      return VideoEntity.TYPE_LIVE_LIVE;
+    if (video.getLiveStart() != null && video.getLiveEnd() != null)
+      return VideoEntity.TYPE_LIVE_ARCHIVE;
+
+    return null;
   }
 }
