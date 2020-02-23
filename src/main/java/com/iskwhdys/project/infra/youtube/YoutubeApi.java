@@ -28,15 +28,8 @@ public class YoutubeApi {
   public List<Map<String, Object>> downloadChannelItems(String channelId, String... parts) {
     if (videoKey.isEmpty()) return new ArrayList<>();
 
-    String url =
-        URL_BASE
-            + "/channels?"
-            + "id="
-            + channelId
-            + "&key="
-            + videoKey
-            + "&part="
-            + String.join(",", parts);
+    String format = "%s/channels?id=%s&key=%s&part=%s";
+    String url = String.format(format, URL_BASE, channelId, videoKey, String.join(",", parts));
 
     var items = restTemplate.getForObject(url, Map.class).get("items");
     return (List<Map<String, Object>>) items;
@@ -46,15 +39,8 @@ public class YoutubeApi {
   public List<Map<String, Object>> downloadVideoItems(String videoId, String... parts) {
     if (videoKey.isEmpty()) return new ArrayList<>();
 
-    String url =
-        URL_BASE
-            + "/videos?"
-            + "id="
-            + videoId
-            + "&key="
-            + videoKey
-            + "&part="
-            + String.join(",", parts);
+    String format = "%s/videos?id=%s&key=%s&part=%s";
+    String url = String.format(format, URL_BASE, videoId, videoKey, String.join(",", parts));
 
     var items = restTemplate.getForObject(url, Map.class).get("items");
     return (List<Map<String, Object>>) items;

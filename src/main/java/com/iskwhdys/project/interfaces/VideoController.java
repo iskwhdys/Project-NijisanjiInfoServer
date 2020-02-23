@@ -23,18 +23,17 @@ public class VideoController {
 
   @Autowired VideoRepository vr;
 
-  @GetMapping(value = "/live")
-  public List<VideoEntity> getsLive(@RequestParam(name = "mode") String mode) {
+  @GetMapping("/live")
+  public List<VideoEntity> getsLive(@RequestParam String mode) {
     if ("new".equals(mode)) {
       return vr.findByEnabledTrueAndTypeInOrderByLiveStartDesc(VideoEntity.TYPE_LIVES);
     }
     return new ArrayList<>();
   }
 
-  @GetMapping(value = "/upload")
+  @GetMapping("/upload")
   public List<VideoEntity> getUpload(
-      @RequestParam(name = "mode") String mode,
-      @RequestParam(name = "from", required = false) String from) {
+      @RequestParam String mode, @RequestParam(required = false) String from) {
 
     if ("new".equals(mode)) {
       return vr.findByEnabledTrueAndTypeInAndUploadDateBetweenOrderByUploadDateDesc(
@@ -48,10 +47,9 @@ public class VideoController {
     return new ArrayList<>();
   }
 
-  @GetMapping(value = "/archive")
+  @GetMapping("/archive")
   public List<VideoEntity> getArchive(
-      @RequestParam(name = "mode") String mode,
-      @RequestParam(name = "from", required = false) String from) {
+      @RequestParam String mode, @RequestParam(required = false) String from) {
 
     if ("new".equals(mode)) {
       return vr.findByEnabledTrueAndTypeEqualsAndLiveStartBetweenOrderByLiveStartDesc(
@@ -65,10 +63,9 @@ public class VideoController {
     return new ArrayList<>();
   }
 
-  @GetMapping(value = "/premier")
+  @GetMapping("/premier")
   public List<VideoEntity> getPremier(
-      @RequestParam(name = "mode") String mode,
-      @RequestParam(name = "from", required = false) String from) {
+      @RequestParam String mode, @RequestParam(required = false) String from) {
 
     if ("new".equals(mode)) {
       return vr.findByEnabledTrueAndTypeEqualsAndLiveScheduleBetweenOrderByLiveSchedule(
@@ -82,10 +79,9 @@ public class VideoController {
     return new ArrayList<>();
   }
 
-  @GetMapping(value = "/schedule")
+  @GetMapping("/schedule")
   public List<VideoEntity> getSchedule(
-      @RequestParam(name = "mode") String mode,
-      @RequestParam(name = "from", required = false) String from) {
+      @RequestParam String mode, @RequestParam(required = false) String from) {
 
     if ("new".equals(mode)) {
       return vr.findByEnabledTrueAndTypeEqualsAndLiveScheduleBetweenOrderByLiveSchedule(
@@ -99,8 +95,8 @@ public class VideoController {
     return new ArrayList<>();
   }
 
-  @GetMapping(value = "/channel/{channelId}")
-  public List<VideoEntity> getChannel(@PathVariable("channelId") String channelId) {
+  @GetMapping("/channel/{channelId}")
+  public List<VideoEntity> getChannel(@PathVariable String channelId) {
     return vr.findTop10ByEnabledTrueAndChannelIdEqualsAndUploadDateBeforeOrderByUploadDateDesc(
         channelId, new Date());
   }

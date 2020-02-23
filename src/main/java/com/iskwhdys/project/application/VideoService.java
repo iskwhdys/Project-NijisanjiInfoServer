@@ -49,13 +49,7 @@ public class VideoService {
   private List<VideoEntity> update(boolean isUpdateLiveVideos, boolean isUpdateEccentricVideos) {
 
     // 全チャンネルのRssXmlから動画情報Elementを取得
-    Map<String, Element> elements =
-        ChannelFeedXml.getVideoElement(
-            channelRepository
-                .findByEnabledTrue()
-                .stream()
-                .map(ChannelEntity::getId)
-                .collect(Collectors.toList()));
+    Map<String, Element> elements = ChannelFeedXml.getVideoElement(getAllChannelId());
     List<VideoEntity> videos = new ArrayList<>();
 
     // 全動画情報Elementを元にEntityを作成 or 情報の更新
@@ -87,6 +81,14 @@ public class VideoService {
 
     videoRepository.saveAll(videos);
     return videos;
+  }
+
+  private List<String> getAllChannelId() {
+    return channelRepository
+        .findByEnabledTrue()
+        .stream()
+        .map(ChannelEntity::getId)
+        .collect(Collectors.toList());
   }
 
   /**

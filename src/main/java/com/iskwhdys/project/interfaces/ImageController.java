@@ -21,8 +21,8 @@ public class ImageController {
   @Autowired VideoThumbnailService videoThumbnailService;
   @Autowired ChannelImageService channelImageService;
 
-  @GetMapping(value = "/video/{id}/thumbnail_mini")
-  public ResponseEntity<byte[]> geThumbnailMini(@PathVariable("id") String id, Model model) {
+  @GetMapping("/video/{id}/thumbnail_mini")
+  public ResponseEntity<byte[]> geThumbnailMini(@PathVariable String id) {
     var bytes = videoThumbnailService.getThumbnailMini(id);
 
     HttpHeaders headers = new HttpHeaders();
@@ -30,8 +30,8 @@ public class ImageController {
     return new ResponseEntity<>(bytes, headers, HttpStatus.OK);
   }
 
-  @GetMapping(value = "/channel/{id}/thumbnail")
-  public ResponseEntity<byte[]> getChannelThumbnail(@PathVariable("id") String id, Model model) {
+  @GetMapping("/channel/{id}/thumbnail")
+  public ResponseEntity<byte[]> getChannelThumbnail(@PathVariable String id) {
     var bytes = channelImageService.getThumbnail(id);
 
     HttpHeaders headers = new HttpHeaders();
@@ -39,7 +39,7 @@ public class ImageController {
     return new ResponseEntity<>(bytes, headers, HttpStatus.OK);
   }
 
-  @GetMapping(value = "/channel/{id}/thumbnail_mini")
+  @GetMapping("/channel/{id}/thumbnail_mini")
   public ResponseEntity<byte[]> getChannelThumbnailMini(
       @PathVariable("id") String id, Model model) {
     var bytes = channelImageService.getThumbnailMini(id);

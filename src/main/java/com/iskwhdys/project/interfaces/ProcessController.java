@@ -37,11 +37,12 @@ public class ProcessController {
 
   @Autowired YoutubeApi youtubeApi;
 
-  @Scheduled(cron = "0 3,5,10,15,25,30,35,45,50,55 * * * *", zone = "Asia/Tokyo")
+  @Scheduled(cron = "0 1,2,3,4,5,6,7,8,9,10,15,25,30,35,45,50,55 * * * *", zone = "Asia/Tokyo")
   public void cron5min() {
     if (youtubeApi.enabled()) {
-      log.info("cron5min " + new Date());
+      log.info("cron5min start");
       videoService.update5min();
+      log.info("cron5min end");
     } else {
       log.info("cron5min Disabled");
     }
@@ -50,8 +51,9 @@ public class ProcessController {
   @Scheduled(cron = "0 0,20,40 * * * *", zone = "Asia/Tokyo")
   public void cron20min() {
     if (youtubeApi.enabled()) {
-      log.info("cron20min " + new Date());
+      log.info("cron20min start");
       videoService.update20min();
+      log.info("cron20min end");
     } else {
       log.info("cron20min Disabled");
     }
@@ -67,27 +69,25 @@ public class ProcessController {
     }
   }
 
-
   @Value("${spring.datasource.password}")
   String password;
 
   @ResponseBody
-  @GetMapping(value = "/batch")
+  @GetMapping("/batch")
   public String batch(
       @RequestParam String name,
       @RequestParam String pass,
       @RequestParam(required = false) String value) {
     log.info("process-start:" + name);
 
-    if(!password.equals(pass)) {
-        return "error:" + name;
+    if (!password.equals(pass)) {
+      return "error:" + name;
     }
 
     switch (name) {
       case "test":
         break;
 
-        // 定期ジョブ
       case "update5min":
         videoService.update5min();
         break;
@@ -101,9 +101,9 @@ public class ProcessController {
         channelService.updateAll();
         break;
 
-        //      case "tweet":
-        //        videoService.tweet(value);
-        //        break;
+      case "tweet":
+        videoService.tweet(value);
+        break;
 
       default:
         return name;

@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,14 +19,14 @@ public class ChannelController {
   @Autowired ChannelRepository cr;
 
   @ResponseBody
-  @GetMapping(value = "/api/channel")
-  public List<ChannelEntity> getChannels(Model model) {
+  @GetMapping( "/api/channel")
+  public List<ChannelEntity> getChannels() {
     return cr.findByEnabledTrue();
   }
 
   @ResponseBody
-  @GetMapping(value = "/api/channel/{id}")
-  public ChannelEntity getChannels(@PathVariable("id") String id, Model model) {
+  @GetMapping("/api/channel/{id}")
+  public ChannelEntity getChannels(@PathVariable String id) {
     return cr.findById(id).orElse(null);
   }
 }
