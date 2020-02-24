@@ -39,19 +39,18 @@ public class VideoService {
   @Autowired VideoSpecification videoApi;
 
   public List<VideoEntity> update5min() {
-    return update(false, false, false);
+    return update(false, false);
   }
 
   public List<VideoEntity> update20min() {
-    return update(true, true, false);
+    return update(true, false);
   }
 
   public List<VideoEntity> allMaintenace() {
-    return update(true, true, true);
+    return update(true, true);
   }
 
-  private List<VideoEntity> update(
-      boolean isUpdateLiveVideos, boolean isUpdateEccentricVideos, boolean isAllThumbnailUopdate) {
+  private List<VideoEntity> update(boolean isUseApi, boolean isAllThumbnailUopdate) {
 
     // 全チャンネルのRssXmlから動画情報Elementを取得
     Map<String, Element> elements = ChannelFeedXml.getVideoElement(getAllChannelId());
@@ -69,9 +68,9 @@ public class VideoService {
       } else if (video.isLiveArchive()) {
         updateLiveArchiveVideo(element, video);
       } else if (video.isPremierLive() || video.isLiveLive()) {
-        updateLiveVideo(element, video, isUpdateLiveVideos);
+        updateLiveVideo(element, video, isUseApi);
       } else if (video.isPremierReserve() || video.isLiveReserve()) {
-        updateReserveVideo(element, video);
+        updateReserveVideo(element, video, isUseApi);
       } else if (video.isUnknown()) {
         updateUnknownVideo(element, video);
       }
@@ -79,7 +78,7 @@ public class VideoService {
     }
 
     var videoIds = videos.stream().map(VideoEntity::getId).collect(Collectors.toList());
-    videos.addAll(updateNoXmlLives(videoIds, isUpdateEccentricVideos));
+    videos.addAll(updateNoXmlLives(videoIds, isUseApi));
     videos.addAll(updateNoXmlTodayVideos(videoIds));
 
     if (isAllThumbnailUopdate) {
@@ -201,7 +200,7 @@ public class VideoService {
     }
   }
 
-  private void updateReserveVideo(Element element, VideoEntity video) {
+  private void updateReserveVideo(Element element, VideoEntity video, boolean isUseApi) {
 
     videoFactory.updateViaXmlElement(element, video);
     boolean success = videoThumbnailService.downloadThumbnails(video);
@@ -213,6 +212,8 @@ public class VideoService {
     if (new Date().getTime() < video.getLiveSchedule().getTime()) return;
     // 配信予定日時が24時間を超えた動画は除外
     if ((new Date().getTime() - video.getLiveSchedule().getTime()) > 1000 * 60 * 60 * 24) return;
+    // リアルタイム更新の場合、20分を超えた場合は除外
+    if(!isUseApi && (new Date().getTime() - video.getLiveSchedule().getTime()) > 1000 * 60 * 20) return ;
 
     videoApi.updateReserveInfoViaApi(video);
     if (video.isPremierUpload() || video.isLiveArchive()) {

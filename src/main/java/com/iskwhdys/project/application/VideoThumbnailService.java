@@ -70,6 +70,10 @@ public class VideoThumbnailService {
   }
 
   public boolean downloadThumbnails(VideoEntity entity) {
+    if (cache.containsKey(entity.getId())) {
+    	cache.remove(entity.getId());
+    }
+
     try {
       var dirPath = Paths.get(thumbnailPath);
 
