@@ -1,7 +1,5 @@
 package com.iskwhdys.project.interfaces;
 
-import java.util.Date;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -62,8 +60,10 @@ public class ProcessController {
   @Scheduled(cron = "0 45 16 * * *", zone = "Asia/Tokyo")
   public void cron1day() {
     if (youtubeApi.enabled()) {
-      log.info("cron1day " + new Date());
+      log.info("cron1day start");
+      videoService.update20min();
       channelService.updateAll();
+      log.info("cron1day end");
     } else {
       log.info("cron1day Disabled");
     }
@@ -81,7 +81,7 @@ public class ProcessController {
     log.info("process-start:" + name);
 
     if (!password.equals(pass)) {
-      return "error:" + name;
+      return "Complate:" + name;
     }
 
     switch (name) {
@@ -99,6 +99,10 @@ public class ProcessController {
       case "update1day":
         videoService.update20min();
         channelService.updateAll();
+        break;
+
+      case "videoMaintenance":
+        videoService.allMaintenace();
         break;
 
       case "tweet":

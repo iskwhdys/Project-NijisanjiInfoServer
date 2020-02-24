@@ -39,14 +39,19 @@ public class VideoService {
   @Autowired VideoSpecification videoApi;
 
   public List<VideoEntity> update5min() {
-    return update(false, false);
+    return update(false, false, false);
   }
 
   public List<VideoEntity> update20min() {
-    return update(true, true);
+    return update(true, true, false);
   }
 
-  private List<VideoEntity> update(boolean isUpdateLiveVideos, boolean isUpdateEccentricVideos) {
+  public List<VideoEntity> allMaintenace() {
+    return update(true, true, true);
+  }
+
+  private List<VideoEntity> update(
+      boolean isUpdateLiveVideos, boolean isUpdateEccentricVideos, boolean isAllThumbnailUopdate) {
 
     // 全チャンネルのRssXmlから動画情報Elementを取得
     Map<String, Element> elements = ChannelFeedXml.getVideoElement(getAllChannelId());
@@ -77,6 +82,11 @@ public class VideoService {
     videos.addAll(updateNoXmlLives(videoIds, isUpdateEccentricVideos));
     videos.addAll(updateNoXmlTodayVideos(videoIds));
 
+    if (isAllThumbnailUopdate) {
+      videoIds = videos.stream().map(VideoEntity::getId).collect(Collectors.toList());
+      videos.addAll(updateOtherVideos(videoIds));
+    }
+
     videoRepository.saveAll(videos);
     return videos;
   }
@@ -101,7 +111,14 @@ public class VideoService {
         videoRepository.findByTypeInAndEnabledTrueAndIdNotInOrderByLiveStartDesc(
             VideoEntity.TYPE_LIVES, videoIds);
     for (var video : videos) {
-      updateXmlNotExitVideo(video, isUpdateEccentricVideos);
+      boolean success = videoThumbnailService.downloadThumbnails(video);
+      video.setEnabled(success);
+      if (success && isUpdateEccentricVideos) {
+        videoApi.updateEntity(video);
+        log.info("API None ->" + video.getType() + " " + video.toString());
+      } else {
+        log.info("XML None ->" + video.getType() + " " + video.toString());
+      }
     }
     return videos;
   }
@@ -113,9 +130,19 @@ public class VideoService {
    * @return
    */
   private List<VideoEntity> updateNoXmlTodayVideos(List<String> videoIds) {
-    var videos = videoRepository.findByIdNotInAndTodayUploadVideoAndArchives(videoIds);
+    var videos = videoRepository.findByIdNotInAndTodayVideos(videoIds);
     for (var video : videos) {
-      updatePrivateVideo(video);
+      video.setEnabled(videoThumbnailService.downloadThumbnails(video));
+      log.info("Private ->" + video.getType() + " " + video.toString());
+    }
+    return videos;
+  }
+
+  private List<VideoEntity> updateOtherVideos(List<String> videoIds) {
+    var videos = videoRepository.findByEnabledTrueAndIdNotIn(videoIds);
+    for (var video : videos) {
+      video.setEnabled(videoThumbnailService.downloadThumbnails(video));
+      log.info("Other ->" + video.getType() + " " + video.toString());
     }
     return videos;
   }
@@ -170,7 +197,7 @@ public class VideoService {
       }
       log.info("API Live -> " + video.getType() + " " + video.toString());
     } else {
-      log.info("XML Live -> " + video.getType() + " " + video.toString());
+      // log.info("XML Live -> " + video.getType() + " " + video.toString());
     }
   }
 
@@ -182,7 +209,7 @@ public class VideoService {
 
     // 無効な動画は除外
     if (Boolean.FALSE.equals(video.getEnabled())) return;
-    // 配信予定日時を過ぎてない動画 もしくは再生が0の動画は除外
+    // 配信予定日時を過ぎてない動画は除外
     if (new Date().getTime() < video.getLiveSchedule().getTime()) return;
     // 配信予定日時が24時間を超えた動画は除外
     if ((new Date().getTime() - video.getLiveSchedule().getTime()) > 1000 * 60 * 60 * 24) return;
@@ -202,22 +229,6 @@ public class VideoService {
     videoThumbnailService.downloadThumbnails(video);
     videoApi.updateEntity(video);
     log.info("API Unknown -> " + video.getType() + " " + video.toString());
-  }
-
-  private void updateXmlNotExitVideo(VideoEntity video, boolean isUpdateEccentricVideos) {
-    boolean success = videoThumbnailService.downloadThumbnails(video);
-    video.setEnabled(success);
-    if (success && isUpdateEccentricVideos) {
-      videoApi.updateEntity(video);
-      log.info("API None ->" + video.getType() + " " + video.toString());
-    } else {
-      log.info("XML None ->" + video.getType() + " " + video.toString());
-    }
-  }
-
-  private void updatePrivateVideo(VideoEntity video) {
-    video.setEnabled(videoThumbnailService.downloadThumbnails(video));
-    log.info("Private ->" + video.getType() + " " + video.toString());
   }
 
   public void tweet(String id) {

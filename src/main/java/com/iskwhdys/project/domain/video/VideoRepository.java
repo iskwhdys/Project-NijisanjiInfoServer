@@ -10,6 +10,8 @@ import org.springframework.data.jpa.repository.Query;
 public interface VideoRepository
     extends JpaRepository<VideoEntity, String>, JpaSpecificationExecutor<VideoEntity> {
 
+  List<VideoEntity> findByEnabledTrueAndIdNotIn(List<String> id);
+
   List<VideoEntity> findByTypeInAndEnabledTrueAndIdNotInOrderByLiveStartDesc(
       List<String> type, List<String> id);
 
@@ -25,7 +27,7 @@ public interface VideoRepository
               + "	 (type='LiveArchive' and (CURRENT_TIMESTAMP - live_start) < '24:00:00')) and"
               + "	enabled = true",
       nativeQuery = true)
-  List<VideoEntity> findByIdNotInAndTodayUploadVideoAndArchives(List<String> of);
+  List<VideoEntity> findByIdNotInAndTodayVideos(List<String> of);
 
   List<VideoEntity> findByEnabledTrueAndTypeInOrderByLiveStartDesc(List<String> of);
 
