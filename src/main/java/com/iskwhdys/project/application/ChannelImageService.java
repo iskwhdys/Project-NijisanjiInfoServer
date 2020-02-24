@@ -79,6 +79,10 @@ public class ChannelImageService {
   }
 
   public boolean downloadThumbnail(ChannelEntity entity) {
+    if (cache.containsKey(entity.getId())) {
+      cache.remove(entity.getId());
+    }
+
     try {
       var dirPath = Paths.get(thumbnailPath);
 

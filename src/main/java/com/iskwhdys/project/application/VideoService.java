@@ -50,7 +50,7 @@ public class VideoService {
     return update(true, true);
   }
 
-  private List<VideoEntity> update(boolean isUseApi, boolean isAllThumbnailUopdate) {
+  private List<VideoEntity> update(boolean is20min, boolean isAllThumbnailUopdate) {
 
     // 全チャンネルのRssXmlから動画情報Elementを取得
     Map<String, Element> elements = ChannelFeedXml.getVideoElement(getAllChannelId());
@@ -64,13 +64,13 @@ public class VideoService {
       if (video == null) {
         video = createNewVideo(element);
       } else if (video.isUpload() || video.isPremierUpload()) {
-        updateUploadVideo(element, video);
+        updateUploadVideo(element, video, is20min);
       } else if (video.isLiveArchive()) {
-        updateLiveArchiveVideo(element, video);
+        updateLiveArchiveVideo(element, video, is20min);
       } else if (video.isPremierLive() || video.isLiveLive()) {
-        updateLiveVideo(element, video, isUseApi);
+        updateLiveVideo(element, video, is20min);
       } else if (video.isPremierReserve() || video.isLiveReserve()) {
-        updateReserveVideo(element, video, isUseApi);
+        updateReserveVideo(element, video, is20min);
       } else if (video.isUnknown()) {
         updateUnknownVideo(element, video);
       }
@@ -78,8 +78,8 @@ public class VideoService {
     }
 
     var videoIds = videos.stream().map(VideoEntity::getId).collect(Collectors.toList());
-    videos.addAll(updateNoXmlLives(videoIds, isUseApi));
-    videos.addAll(updateNoXmlTodayVideos(videoIds));
+    videos.addAll(updateNoXmlLives(videoIds, is20min));
+    videos.addAll(updateNoXmlTodayVideos(videoIds, is20min));
 
     if (isAllThumbnailUopdate) {
       videoIds = videos.stream().map(VideoEntity::getId).collect(Collectors.toList());
@@ -104,15 +104,14 @@ public class VideoService {
    * @param videoIds
    * @return
    */
-  private List<VideoEntity> updateNoXmlLives(
-      List<String> videoIds, boolean isUpdateEccentricVideos) {
+  private List<VideoEntity> updateNoXmlLives(List<String> videoIds, boolean is20min) {
     var videos =
         videoRepository.findByTypeInAndEnabledTrueAndIdNotInOrderByLiveStartDesc(
             VideoEntity.TYPE_LIVES, videoIds);
     for (var video : videos) {
       boolean success = videoThumbnailService.downloadThumbnails(video);
       video.setEnabled(success);
-      if (success && isUpdateEccentricVideos) {
+      if (success && is20min) {
         videoApi.updateEntity(video);
         log.info("API None ->" + video.getType() + " " + video.toString());
       } else {
@@ -123,12 +122,14 @@ public class VideoService {
   }
 
   /**
-   * 24時間以内に公開された動画類でXMLに無いもの（ライブ終了直後でXMLに反映されてないもの）
+   * 24時間以内に公開された動画類でXMLに無いもの（ライブ終了直後でXMLに反映されてないもの or 限定公開）
    *
    * @param videoIds
    * @return
    */
-  private List<VideoEntity> updateNoXmlTodayVideos(List<String> videoIds) {
+  private List<VideoEntity> updateNoXmlTodayVideos(List<String> videoIds, boolean is20min) {
+    if (!is20min) return new ArrayList<>();
+
     var videos = videoRepository.findByIdNotInAndTodayVideos(videoIds);
     for (var video : videos) {
       video.setEnabled(videoThumbnailService.downloadThumbnails(video));
@@ -159,10 +160,10 @@ public class VideoService {
     return video;
   }
 
-  private void updateUploadVideo(Element element, VideoEntity video) {
+  private void updateUploadVideo(Element element, VideoEntity video, boolean is20min) {
     videoFactory.updateViaXmlElement(element, video);
 
-    if ((new Date().getTime() - video.getUploadDate().getTime()) < 1000 * 60 * 60 * 24) {
+    if (is20min && (new Date().getTime() - video.getUploadDate().getTime()) < 1000 * 60 * 60 * 24) {
       // 公開して24時間以内の動画はサムネイルを更新する
       boolean success = videoThumbnailService.downloadThumbnails(video);
       // サムネ更新が出来ない == 動画が非公開
@@ -171,11 +172,11 @@ public class VideoService {
     }
   }
 
-  private void updateLiveArchiveVideo(Element element, VideoEntity video) {
+  private void updateLiveArchiveVideo(Element element, VideoEntity video, boolean is20min) {
 
     videoFactory.updateViaXmlElement(element, video);
 
-    if ((new Date().getTime() - video.getLiveStart().getTime()) < 1000 * 60 * 60 * 24) {
+    if (is20min && (new Date().getTime() - video.getLiveStart().getTime()) < 1000 * 60 * 60 * 24) {
       // 配信して24時間以内の動画はサムネイルを更新する
       boolean success = videoThumbnailService.downloadThumbnails(video);
       // サムネ更新が出来ない == 動画が非公開
@@ -184,19 +185,19 @@ public class VideoService {
     }
   }
 
-  private void updateLiveVideo(Element element, VideoEntity video, boolean isUpdateLiveVideos) {
+  private void updateLiveVideo(Element element, VideoEntity video, boolean is20min) {
 
     videoFactory.updateViaXmlElement(element, video);
     videoThumbnailService.downloadThumbnails(video);
 
-    if (isUpdateLiveVideos) {
+    if (is20min) {
       videoApi.updateLiveInfoViaApi(video);
       if (video.isPremierUpload() || video.isLiveArchive()) {
         videoApi.updateLiveToArchiveInfoViaApi(video);
       }
       log.info("API Live -> " + video.getType() + " " + video.toString());
     } else {
-      // log.info("XML Live -> " + video.getType() + " " + video.toString());
+      log.debug("XML Live -> " + video.getType() + " " + video.toString());
     }
   }
 
@@ -213,7 +214,8 @@ public class VideoService {
     // 配信予定日時が24時間を超えた動画は除外
     if ((new Date().getTime() - video.getLiveSchedule().getTime()) > 1000 * 60 * 60 * 24) return;
     // リアルタイム更新の場合、20分を超えた場合は除外
-    if(!isUseApi && (new Date().getTime() - video.getLiveSchedule().getTime()) > 1000 * 60 * 20) return ;
+    if (!isUseApi && (new Date().getTime() - video.getLiveSchedule().getTime()) > 1000 * 60 * 20)
+      return;
 
     videoApi.updateReserveInfoViaApi(video);
     if (video.isPremierUpload() || video.isLiveArchive()) {
