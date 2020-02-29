@@ -44,7 +44,7 @@ public class TwitterApi {
   }
 
   public void tweet(String msg) {
-    log.info(msg);
+    log.info(msg.replace("\r\n", " "));
 
     if (twitter == null) {
       log.info("Twitterの各種キーが無いためツイートしません。");

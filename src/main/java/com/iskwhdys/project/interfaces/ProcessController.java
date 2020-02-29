@@ -1,5 +1,6 @@
 package com.iskwhdys.project.interfaces;
 
+import java.util.Date;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -10,13 +11,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestTemplate;
-
 import com.iskwhdys.project.application.ChannelService;
+import com.iskwhdys.project.application.TweetService;
 import com.iskwhdys.project.application.VideoService;
 import com.iskwhdys.project.domain.channel.ChannelRepository;
 import com.iskwhdys.project.domain.video.VideoRepository;
 import com.iskwhdys.project.infra.youtube.YoutubeApi;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Controller
@@ -32,36 +32,37 @@ public class ProcessController {
 
   @Autowired ChannelService channelService;
   @Autowired VideoService videoService;
+  @Autowired TweetService tweetService;
 
   @Autowired YoutubeApi youtubeApi;
 
-  @Scheduled(cron = "0 1,2,3,4,5,6,7,8,9,10,15,25,30,35,45,50,55 * * * *", zone = "Asia/Tokyo")
-  public void cron5min() {
-    if (youtubeApi.enabled()) {
-      log.info("cron5min start");
-      videoService.update5min();
-      log.info("cron5min end");
-    } else {
-      log.info("cron5min Disabled");
+  @Scheduled(cron = "0 * * * * *", zone = "Asia/Tokyo")
+  public void cronPerMinute() {
+    if (!youtubeApi.enabled()) {
+      return;
     }
-  }
 
-  @Scheduled(cron = "0 0,20,40 * * * *", zone = "Asia/Tokyo")
-  public void cron20min() {
-    if (youtubeApi.enabled()) {
-      log.info("cron20min start");
-      videoService.update20min();
-      log.info("cron20min end");
+    int min = new Date().getMinutes();
+    if (min == 0) {
+      videoService.update(60, false);
+      log.info("cronPerMinute 60 end");
+    } else if (min % 20 == 0) {
+      videoService.update(20, false);
+      log.info("cronPerMinute 20 end");
+    } else if (min % 5 == 0) {
+      videoService.update(5, false);
+      log.info("cronPerMinute 5  end");
     } else {
-      log.info("cron20min Disabled");
+      videoService.update(1, false);
+      log.info("cronPerMinute 1  end");
     }
+
   }
 
   @Scheduled(cron = "0 45 16 * * *", zone = "Asia/Tokyo")
   public void cron1day() {
     if (youtubeApi.enabled()) {
       log.info("cron1day start");
-      videoService.update20min();
       channelService.updateAll();
       log.info("cron1day end");
     } else {
@@ -88,25 +89,21 @@ public class ProcessController {
       case "test":
         break;
 
-      case "update5min":
-        videoService.update5min();
-        break;
-
-      case "update20min":
-        videoService.update20min();
+      case "update":
+        videoService.update(Integer.parseInt(value), false);
         break;
 
       case "update1day":
-        videoService.update20min();
+        videoService.update(60, false);
         channelService.updateAll();
         break;
 
       case "videoMaintenance":
-        videoService.allMaintenace();
+        videoService.update(60, true);
         break;
 
       case "tweet":
-        videoService.tweet(value);
+        tweetService.tweet(value);
         break;
 
       default:

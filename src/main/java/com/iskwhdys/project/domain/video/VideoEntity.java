@@ -2,11 +2,9 @@ package com.iskwhdys.project.domain.video;
 
 import java.util.Date;
 import java.util.List;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -54,6 +52,18 @@ public class VideoEntity {
   public static final List<String> TYPE_UPLOADS = List.of(TYPE_PREMIER_UPLOAD, TYPE_UPLOAD);
   public static final List<String> TYPE_LIVES = List.of(TYPE_PREMIER_LIVE, TYPE_LIVE_LIVE);
 
+  public long liveElapsedMinute() {
+    return (new Date().getTime() - getLiveStart().getTime()) / 1000 / 60;
+  }
+
+  public long uploadElapsedMinute() {
+    return (new Date().getTime() - getUploadDate().getTime()) / 1000 / 60;
+  }
+
+  public long scheduleElapsedMinute() {
+    return (new Date().getTime() - getLiveSchedule().getTime()) / 1000 / 60;
+  }
+
   public boolean isUpload() {
     return TYPE_UPLOAD.equals(getType());
   }
@@ -87,6 +97,6 @@ public class VideoEntity {
   }
 
   public String toString() {
-    return "Video:[" + getId() + "] [" + getTitle() + "]";
+    return "Video:[" + getId() + "] [" + getEnabled() + "] [" + getTitle() + "]";
   }
 }
