@@ -44,7 +44,7 @@ public class VideoService {
       if (video == null) {
         video = createNewVideo(element);
       } else if (video.isUpload() || video.isPremierUpload()) {
-        updateUploadVideo(element, video, intervalMinute );
+        updateUploadVideo(element, video, intervalMinute);
       } else if (video.isLiveArchive()) {
         updateLiveArchiveVideo(element, video, intervalMinute);
       } else if (video.isPremierLive() || video.isLiveLive()) {
@@ -60,6 +60,7 @@ public class VideoService {
     var videoIds = videos.stream().map(VideoEntity::getId).collect(Collectors.toList());
     videos.addAll(updateNoXmlLives(videoIds, intervalMinute));
     videos.addAll(updateNoXmlTodayVideos(videoIds, intervalMinute));
+    videos.addAll(updateAllReserveVideos(videoIds, intervalMinute));
 
     if (isAllThumbnailUopdate) {
       videoIds = videos.stream().map(VideoEntity::getId).collect(Collectors.toList());
@@ -90,7 +91,7 @@ public class VideoService {
 
     for (var video : videos) {
       video.setEnabled(videoThumbnailService.downloadThumbnails(video));
-      if(Boolean.FALSE.equals(video.getEnabled())) continue;
+      if (Boolean.FALSE.equals(video.getEnabled())) continue;
       if (intervalMinute == 1) {
         log.info("XML None ->" + video.getType() + " " + video.toString());
       } else {
@@ -113,10 +114,35 @@ public class VideoService {
     var videos = videoRepository.findByIdNotInAndTodayVideos(videoIds);
     for (var video : videos) {
       video.setEnabled(videoThumbnailService.downloadThumbnails(video));
-      log.info("Private ->" + video.getType() + " " + video.toString());
+      log.info("DB  Private ->" + video.getType() + " " + video.toString());
     }
     return videos;
   }
+
+
+  /**
+   * 全予約動画の更新
+   *
+   * @param videoIds
+   * @return
+   */
+  private List<VideoEntity> updateAllReserveVideos(List<String> videoIds, int intervalMinute) {
+    if (intervalMinute < 60 * 24) return new ArrayList<>();
+
+    var videos = videoRepository.findByIdNotInAndTypeAllReserve(videoIds);
+    for (var video : videos) {
+      video.setEnabled(videoThumbnailService.downloadThumbnails(video));
+      if(Boolean.FALSE.equals(video.getEnabled())) {
+        log.info("DB  Private ->" + video.getType() + " " + video.toString());
+      }
+      else {
+        videoApi.updateEntity(video);
+        log.info("API Private ->" + video.getType() + " " + video.toString());
+      }
+    }
+    return videos;
+  }
+
 
   private List<VideoEntity> updateOtherVideos(List<String> videoIds) {
     var videos = videoRepository.findByEnabledTrueAndIdNotIn(videoIds);
@@ -143,7 +169,7 @@ public class VideoService {
   private void updateUploadVideo(Element element, VideoEntity video, int intervalMinute) {
     videoFactory.updateViaXmlElement(element, video);
 
-    if (video.uploadElapsedMinute() < 60 * 24 && intervalMinute == 60) {
+    if (video.uploadElapsedMinute() < 60 * 24 && intervalMinute >= 60) {
       // 公開して24時間以内の動画は、1時間おきにサムネイルを更新する
       video.setEnabled(videoThumbnailService.downloadThumbnails(video));
       log.debug("XML Thumbnail -> " + video.getType() + " " + video.toString());
@@ -154,7 +180,7 @@ public class VideoService {
 
     videoFactory.updateViaXmlElement(element, video);
 
-    if (video.liveElapsedMinute() < 60 * 24 && intervalMinute == 60) {
+    if (video.liveElapsedMinute() < 60 * 24 && intervalMinute >= 60) {
       // 配信から24時間以内の動画は、1時間おきにサムネイルを更新する
       video.setEnabled(videoThumbnailService.downloadThumbnails(video));
       log.debug("XML Thumbnail -> " + video.getType() + " " + video.toString());
@@ -165,7 +191,7 @@ public class VideoService {
 
     videoFactory.updateViaXmlElement(element, video);
 
-    if (intervalMinute >= 20 || (intervalMinute == 5 && (video.liveElapsedMinute() < 20))) {
+    if (intervalMinute >= 20 || (intervalMinute >= 5 && (video.liveElapsedMinute() < 20))) {
       // 20分間隔以上は常時、5分間隔の場合はライブ開始20分以内なら、情報更新
       videoThumbnailService.downloadThumbnails(video);
       videoApi.updateLiveInfoViaApi(video);
@@ -181,23 +207,30 @@ public class VideoService {
   private void updateReserveVideo(Element element, VideoEntity video, int intervalMinute) {
 
     videoFactory.updateViaXmlElement(element, video);
-    if (intervalMinute == 60) {
+    if (intervalMinute >= 60) {
       video.setEnabled(videoThumbnailService.downloadThumbnails(video));
     }
 
-    if (Boolean.FALSE.equals(video.getEnabled())) {
-      log.debug("無効な動画は除外" + video);
-      return;
-    } else if (video.scheduleElapsedMinute() <= 0) {
-      log.debug("配信予定日時を過ぎてない動画は除外" + video);
-      return;
-    } else if (video.scheduleElapsedMinute() > 60 * 24) {
-      log.debug("配信予定日時が24時間を超えた動画は除外" + video);
-      return;
-    }
+    long min = video.scheduleElapsedMinute();
 
-    if (video.scheduleElapsedMinute() < 20 || intervalMinute  >= 20) {
-      // ライブ開始時刻から20分以内、もしくは20分間隔以上なら情報更新
+    // 無効な動画は除外
+    if (Boolean.FALSE.equals(video.getEnabled())) return;
+    // 配信予定日時が24時間を超えた動画は除外
+    if (video.scheduleElapsedMinute() > 60 * 24) return;
+    // 配信開始一時間前より古い動画は除外
+    if (video.scheduleElapsedMinute() <= -60) return;
+
+    //  5分更新　：ライブ開始一時間前
+    boolean i0 = min < 0 && intervalMinute >= 5;
+    // 無条件更新：ライブ開始から20分以内
+    boolean i1 = min >= 0 && min < 20;
+    //  5分更新　：ライブ開始から1時間以内
+    boolean i2 = min >= 0 && min < 60 && intervalMinute >= 5;
+    // 20分更新　：ライブ開始から2時間以内
+    boolean i3 = min >= 0 && min < 60 * 2 && intervalMinute >= 20;
+    // 60分更新　：ライブ開始から24時間以内
+    boolean i4 = min >= 0 && min < 60 * 24 && intervalMinute >= 60;
+    if (i0 || i1 || i2 || i3 || i4) {
       videoApi.updateReserveInfoViaApi(video);
       if (video.isPremierUpload() || video.isLiveArchive()) {
         videoApi.updateLiveToArchiveInfoViaApi(video);

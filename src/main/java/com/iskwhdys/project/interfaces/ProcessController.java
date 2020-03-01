@@ -44,25 +44,29 @@ public class ProcessController {
 
     int min = new Date().getMinutes();
     if (min == 0) {
+      log.info("cronPerMinute 60 start");
       videoService.update(60, false);
       log.info("cronPerMinute 60 end");
     } else if (min % 20 == 0) {
+      log.info("cronPerMinute 20 start");
       videoService.update(20, false);
       log.info("cronPerMinute 20 end");
     } else if (min % 5 == 0) {
+      log.info("cronPerMinute 5  start");
       videoService.update(5, false);
       log.info("cronPerMinute 5  end");
     } else {
+      log.info("cronPerMinute 1  start");
       videoService.update(1, false);
       log.info("cronPerMinute 1  end");
     }
-
   }
 
   @Scheduled(cron = "0 45 16 * * *", zone = "Asia/Tokyo")
   public void cron1day() {
     if (youtubeApi.enabled()) {
       log.info("cron1day start");
+      videoService.update(60 * 24, false);
       channelService.updateAll();
       log.info("cron1day end");
     } else {
@@ -94,7 +98,7 @@ public class ProcessController {
         break;
 
       case "update1day":
-        videoService.update(60, false);
+        videoService.update(60 * 24, false);
         channelService.updateAll();
         break;
 

@@ -2,7 +2,6 @@ package com.iskwhdys.project.domain.video;
 
 import java.util.Date;
 import java.util.List;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -28,6 +27,18 @@ public interface VideoRepository
               + "	enabled = true",
       nativeQuery = true)
   List<VideoEntity> findByIdNotInAndTodayVideos(List<String> of);
+
+  @Query(
+      value =
+          "select * from public.videos "
+              + "where"
+              + "   id not in ?1 and"
+              + "   (type='LiveReserve' or type='PremierReserve') and"
+              + "   enabled = true",
+      nativeQuery = true)
+  List<VideoEntity> findByIdNotInAndTypeAllReserve(List<String> of);
+
+
 
   List<VideoEntity> findByEnabledTrueAndTypeInOrderByLiveStartDesc(List<String> of);
 

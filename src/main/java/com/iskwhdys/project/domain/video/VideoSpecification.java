@@ -3,13 +3,10 @@ package com.iskwhdys.project.domain.video;
 import java.time.Duration;
 import java.util.Date;
 import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import com.iskwhdys.project.Common;
 import com.iskwhdys.project.infra.youtube.YoutubeApi;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Component
@@ -150,6 +147,7 @@ public class VideoSpecification {
 
   private void showDebug(VideoEntity video) {
     log.info("深海の雨森");
+    log.info(video.toString());
     log.info("getCreateDate" + video.getCreateDate());
     log.info("getUpdateDate" + video.getUpdateDate());
     log.info("getUploadDate" + video.getUploadDate());
