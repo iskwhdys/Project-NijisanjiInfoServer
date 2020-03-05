@@ -25,7 +25,7 @@ public class VideoService {
   @Autowired ChannelRepository channelRepository;
   @Autowired VideoRepository videoRepository;
 
-  @Autowired VideoSpecification videoApi;
+  @Autowired VideoSpecification videoSpecification;
   @Autowired VideoFactory videoFactory;
   @Autowired VideoThumbnailService videoThumbnailService;
   @Autowired TweetService tweetService;
@@ -95,7 +95,7 @@ public class VideoService {
       if (intervalMinute == 1) {
         log.info("XML None ->" + video.getType() + " " + video.toString());
       } else {
-        videoApi.updateEntity(video);
+        videoSpecification.updateEntity(video);
         log.info("API None ->" + video.getType() + " " + video.toString());
       }
     }
@@ -136,7 +136,7 @@ public class VideoService {
         log.info("DB  Private ->" + video.getType() + " " + video.toString());
       }
       else {
-        videoApi.updateEntity(video);
+        videoSpecification.updateEntity(video);
         log.info("API Private ->" + video.getType() + " " + video.toString());
       }
     }
@@ -157,7 +157,7 @@ public class VideoService {
     var video = videoFactory.createViaXmlElement(element);
 
     videoThumbnailService.downloadThumbnails(video);
-    videoApi.updateEntity(video);
+    videoSpecification.updateEntity(video);
     if (video.isPremierLive() || video.isLiveLive()) {
       tweetService.tweet(video);
     }
@@ -194,9 +194,9 @@ public class VideoService {
     if (intervalMinute >= 20 || (intervalMinute >= 5 && (video.liveElapsedMinute() < 20))) {
       // 20分間隔以上は常時、5分間隔の場合はライブ開始20分以内なら、情報更新
       videoThumbnailService.downloadThumbnails(video);
-      videoApi.updateLiveInfoViaApi(video);
+      videoSpecification.updateLiveInfoViaApi(video);
       if (video.isPremierUpload() || video.isLiveArchive()) {
-        videoApi.updateLiveToArchiveInfoViaApi(video);
+        videoSpecification.updateLiveToArchiveInfoViaApi(video);
       }
       log.info("API Live -> " + video.getType() + " " + video.toString());
     } else {
@@ -211,29 +211,10 @@ public class VideoService {
       video.setEnabled(videoThumbnailService.downloadThumbnails(video));
     }
 
-    long min = video.scheduleElapsedMinute();
-
-    // 無効な動画は除外
-    if (Boolean.FALSE.equals(video.getEnabled())) return;
-    // 配信予定日時が24時間を超えた動画は除外
-    if (video.scheduleElapsedMinute() > 60 * 24) return;
-    // 配信開始一時間前より古い動画は除外
-    if (video.scheduleElapsedMinute() <= -60) return;
-
-    //  5分更新　：ライブ開始一時間前
-    boolean i0 = min < 0 && intervalMinute >= 5;
-    // 無条件更新：ライブ開始から20分以内
-    boolean i1 = min >= 0 && min < 20;
-    //  5分更新　：ライブ開始から1時間以内
-    boolean i2 = min >= 0 && min < 60 && intervalMinute >= 5;
-    // 20分更新　：ライブ開始から2時間以内
-    boolean i3 = min >= 0 && min < 60 * 2 && intervalMinute >= 20;
-    // 60分更新　：ライブ開始から24時間以内
-    boolean i4 = min >= 0 && min < 60 * 24 && intervalMinute >= 60;
-    if (i0 || i1 || i2 || i3 || i4) {
-      videoApi.updateReserveInfoViaApi(video);
+    if (videoSpecification.isUpdateReserve(video, intervalMinute)) {
+      videoSpecification.updateReserveInfoViaApi(video);
       if (video.isPremierUpload() || video.isLiveArchive()) {
-        videoApi.updateLiveToArchiveInfoViaApi(video);
+        videoSpecification.updateLiveToArchiveInfoViaApi(video);
       }
       if (video.isPremierLive() || video.isLiveLive()) {
         tweetService.tweet(video);
@@ -245,7 +226,7 @@ public class VideoService {
   private void updateUnknownVideo(Element element, VideoEntity video) {
     videoFactory.updateViaXmlElement(element, video);
     videoThumbnailService.downloadThumbnails(video);
-    videoApi.updateEntity(video);
+    videoSpecification.updateEntity(video);
     log.info("API Unknown -> " + video.getType() + " " + video.toString());
   }
 }
