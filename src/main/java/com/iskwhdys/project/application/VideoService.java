@@ -191,10 +191,10 @@ public class VideoService {
 
     videoFactory.updateViaXmlElement(element, video);
 
-    if (intervalMinute >= 20 || (intervalMinute >= 5 && (video.liveElapsedMinute() < 20))) {
-      // 20分間隔以上は常時、5分間隔の場合はライブ開始20分以内なら、情報更新
+    if (videoSpecification.isUpdateLive(video, intervalMinute)) {
       videoThumbnailService.downloadThumbnails(video);
       videoSpecification.updateLiveInfoViaApi(video);
+
       if (video.isPremierUpload() || video.isLiveArchive()) {
         videoSpecification.updateLiveToArchiveInfoViaApi(video);
       }

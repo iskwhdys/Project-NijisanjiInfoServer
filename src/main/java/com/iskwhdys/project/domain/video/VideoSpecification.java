@@ -184,26 +184,77 @@ public class VideoSpecification {
     // 無効な動画は除外
     if (Boolean.FALSE.equals(video.getEnabled())) return false;
 
-    // 視聴者がいる動画は既に配信している プレミアはviewsが0じゃないこともあるのでライブのみ
-    if(video.getViews() > 0 && video.isLiveReserve()) return true;
+    // 視聴数がある動画は既に配信しているので対象 (プレミアはviewsが0じゃないこともあるのでライブのみ)
+    if (video.getViews() > 0 && video.isLiveReserve()) return true;
 
-    // 配信予定日時が24時間を超えた動画は除外
-    if (min > 60 * 24) return false;
-    // 配信開始一時間前からの動画を対象とし、以降は除外
-    if (min <= -60) return false;
+    // 配信開始前もしくは 配信予定日時が24時間を超えた動画は除外
+    if (min < 0 || min > 60 * 24) return false;
 
-    //  5分更新　：ライブ開始一時間前
-    if(min < 0 && intervalMinute >= 5 ) return true;
-    // 無条件更新：ライブ開始から20分以内
-    if(min >= 0 && min < 20) return true;
-    //  5分更新　：ライブ開始から1時間以内
-    if(min >= 0 && min < 60 && intervalMinute >= 5) return true;
-    // 20分更新　：ライブ開始から2時間以内
-    if(min >= 0 && min < 60 * 2 && intervalMinute >= 20) return true;
-    // 60分更新　：ライブ開始から24時間以内
-    return (min >= 0 && min < 60 * 24 && intervalMinute >= 60);
-
+    //  1分更新：開始予定から10分以内
+    if (intervalMinute >= 1 && min < 10) return true;
+    //  5分更新：開始予定から30分以内
+    if (intervalMinute >= 5 && min < 30) return true;
+    // 20分更新：開始予定から1時間以内
+    if (intervalMinute >= 20 && min < 60) return true;
+    // 60分更新：開始予定から24時間以内
+    return (intervalMinute >= 60 &&  min < 60 * 24);
   }
 
+  public boolean isUpdateLive(VideoEntity video, int intervalMinute) {
+    long min = video.liveElapsedMinute();
 
+    //  1分更新：更新しない
+    if(intervalMinute == 1) return false;
+    //  5分更新：ライブ開始から 20分以内
+    if(intervalMinute >= 5 && min < 20) return true;
+    // 20分更新：ライブ開始から1時間以内
+    if(intervalMinute >= 20 && min < 60) return true;
+    // 60分更新：常時
+    return (intervalMinute >= 60);
+
+  }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
