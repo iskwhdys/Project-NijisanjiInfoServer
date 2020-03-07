@@ -64,6 +64,6 @@ public interface VideoRepository
       String of, Date from);
 
   List<VideoEntity>
-      findTop10ByEnabledTrueAndChannelIdEqualsAndUploadDateBeforeOrderByUploadDateDesc(
+      findTop20ByEnabledTrueAndChannelIdEqualsAndUploadDateBeforeOrderByUploadDateDesc(
           String of, Date from);
 }
