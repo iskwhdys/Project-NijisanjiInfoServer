@@ -10,12 +10,9 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.client.RestTemplate;
 import com.iskwhdys.project.application.ChannelService;
 import com.iskwhdys.project.application.TweetService;
 import com.iskwhdys.project.application.VideoService;
-import com.iskwhdys.project.domain.channel.ChannelRepository;
-import com.iskwhdys.project.domain.video.VideoRepository;
 import com.iskwhdys.project.infra.youtube.YoutubeApi;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,12 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 @EnableScheduling
 @Slf4j
 public class ProcessController {
-
-  RestTemplate restTemplate = new RestTemplate();
-
-  @Autowired ChannelRepository channelRepository;
-  @Autowired VideoRepository videoRepository;
-
   @Autowired ChannelService channelService;
   @Autowired VideoService videoService;
   @Autowired TweetService tweetService;

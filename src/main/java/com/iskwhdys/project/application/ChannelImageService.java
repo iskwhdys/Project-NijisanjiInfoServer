@@ -1,23 +1,15 @@
 package com.iskwhdys.project.application;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.util.HashMap;
-import java.util.Map;
-
+import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
-
 import com.iskwhdys.project.domain.channel.ChannelEntity;
 import com.iskwhdys.project.domain.channel.ChannelRepository;
+import com.iskwhdys.project.infra.util.CacheImage;
 import com.iskwhdys.project.infra.util.ImageEditor;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -28,78 +20,46 @@ public class ChannelImageService {
 
   @Value("${nis.path.image.channel}")
   String thumbnailPath;
+  CacheImage cacheImage;
 
-  private Map<String, byte[]> cache = new HashMap<>();
-  private RestTemplate restTemplate = new RestTemplate();
-
-  public byte[] getThumbnailMini(String channelID) {
-    return getThumbnails(channelID, "_mini.jpg");
+  @PostConstruct
+  public void init() {
+    cacheImage = new CacheImage(thumbnailPath, ".jpg", this::resize);
   }
 
-  public byte[] getThumbnail(String channelID) {
-    return getThumbnails(channelID, ".jpg");
+  public byte[] getThumbnailMini(String channelId) {
+    return getThumbnails(channelId, true);
   }
 
-  private byte[] getThumbnails(String channelID, String suffix) {
-    String key = channelID + suffix;
+  public byte[] getThumbnail(String channelId) {
+    return getThumbnails(channelId, false);
+  }
 
-    if (cache.containsKey(key)) {
-      log.trace("Thumbnail-Cache:" + key);
-      return cache.get(key);
-    }
+  private byte[] getThumbnails(String channelId, boolean mini) {
+    byte[] bytes = cacheImage.read(channelId, mini);
+    if (bytes.length != 0) return bytes;
 
-    Path resizePath = Paths.get(thumbnailPath, channelID + suffix);
-    if (Files.exists(resizePath)) {
-      try {
-        cache.put(key, Files.readAllBytes(resizePath));
-        log.debug("Thumbnail-Read:" + key);
-      } catch (IOException e) {
-        throw new ResourceAccessException("File read error", e);
-      }
-      return cache.get(key);
-    }
-
-    var entity = cr.findById(channelID);
+    var entity = cr.findById(channelId);
     if (entity.isEmpty()) {
-      throw new ResourceAccessException("Not found video id");
+      throw new ResourceAccessException("Not found channel id");
     }
-
-    log.debug("Thumbnail-Dowmload:" + entity.get().getTitle());
-    boolean success = downloadThumbnail(entity.get());
-    if (!success) {
+    if (!cacheImage.download(channelId, entity.get().getThumbnailUrl())) {
       throw new ResourceAccessException("Download error");
     }
 
-    try {
-      cache.put(key, Files.readAllBytes(resizePath));
-    } catch (IOException e) {
-      throw new ResourceAccessException("File read error", e);
-    }
-    return cache.get(key);
+    return cacheImage.read(channelId, mini);
   }
 
   public boolean downloadThumbnail(ChannelEntity entity) {
-    if (cache.containsKey(entity.getId())) {
-      cache.remove(entity.getId());
-    }
+    return cacheImage.download(entity.getId(), entity.getThumbnailUrl());
+  }
 
+  private byte[] resize(byte[] bytes) {
     try {
-      var dirPath = Paths.get(thumbnailPath);
-
-      Path orginPath = Paths.get(dirPath.toString(), entity.getId() + ".jpg");
-      Path resizePath = Paths.get(dirPath.toString(), entity.getId() + "_mini.jpg");
-
-      byte[] bytes = restTemplate.getForObject(entity.getThumbnailUrl(), byte[].class);
-
-      Files.createDirectories(dirPath);
-      Files.write(orginPath, bytes, StandardOpenOption.CREATE);
-
       bytes = ImageEditor.resize(bytes, 30, 30, 1.0f);
-      Files.write(resizePath, bytes, StandardOpenOption.CREATE);
-    } catch (Exception e) {
-      log.error(entity.getThumbnailUrl());
-      return false;
+    } catch (IOException e) {
+      //
     }
-    return true;
+    return bytes;
   }
 }
