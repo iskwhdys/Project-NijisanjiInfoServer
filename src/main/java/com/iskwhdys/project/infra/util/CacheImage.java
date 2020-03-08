@@ -60,7 +60,6 @@ public class CacheImage {
   }
 
   public boolean download(String key, String url) {
-
     try {
       Files.createDirectories(Paths.get(directory));
 

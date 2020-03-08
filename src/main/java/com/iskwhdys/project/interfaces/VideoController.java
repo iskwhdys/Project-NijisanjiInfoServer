@@ -96,11 +96,10 @@ public class VideoController {
   public List<VideoEntity> getChannel(@PathVariable String channelId,@RequestParam String mode, @RequestParam(required = false) String from) {
 
     if ("new".equals(mode)) {
-      return vr.findTop20ByEnabledTrueAndChannelIdEqualsAndUploadDateBeforeOrderByUploadDateDesc(
+      return vr.findTop10ByEnabledTrueAndChannelIdEqualsAndUploadDateBeforeOrderByUploadDateDesc(
           channelId, new Date());
     } else if ("get".equals(mode)) {
-
-      return vr.findTop20ByEnabledTrueAndChannelIdEqualsAndUploadDateBeforeOrderByUploadDateDesc(
+      return vr.findTop10ByEnabledTrueAndChannelIdEqualsAndUploadDateBeforeOrderByUploadDateDesc(
           channelId, Common.toDate(from));
     }
 

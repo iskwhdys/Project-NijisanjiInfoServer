@@ -10,21 +10,19 @@ import com.iskwhdys.project.domain.channel.ChannelEntity;
 import com.iskwhdys.project.domain.channel.ChannelRepository;
 import com.iskwhdys.project.infra.util.CacheImage;
 import com.iskwhdys.project.infra.util.ImageEditor;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
-@Slf4j
 public class ChannelImageService {
 
   @Autowired ChannelRepository cr;
 
   @Value("${nis.path.image.channel}")
-  String thumbnailPath;
+  String imageDirectory;
   CacheImage cacheImage;
 
   @PostConstruct
   public void init() {
-    cacheImage = new CacheImage(thumbnailPath, ".jpg", this::resize);
+    cacheImage = new CacheImage(imageDirectory, ".jpg", this::resize);
   }
 
   public byte[] getThumbnailMini(String channelId) {

@@ -17,24 +17,23 @@ public class VideoThumbnailService {
   @Autowired VideoRepository vr;
 
   @Value("${nis.path.image.thunbnail}")
-  String thumbnailPath;
+  String imageDirectory;
   CacheImage cacheImage;
 
   @PostConstruct
   public void init() {
-    cacheImage = new CacheImage(thumbnailPath, ".jpg", this::resize);
+    cacheImage = new CacheImage(imageDirectory, ".jpg", this::resize);
   }
 
   public byte[] getThumbnailMini(String videoId) {
-
     byte[] bytes = cacheImage.readMini(videoId);
     if (bytes.length != 0) return bytes;
 
-    var videoEntity = vr.findById(videoId);
-    if (videoEntity.isEmpty()) {
+    var entity = vr.findById(videoId);
+    if (entity.isEmpty()) {
       throw new ResourceAccessException("Not found video id");
     }
-    if (!cacheImage.download(videoId, videoEntity.get().getThumbnailUrl())) {
+    if (!cacheImage.download(videoId, entity.get().getThumbnailUrl())) {
       throw new ResourceAccessException("Download error");
     }
 

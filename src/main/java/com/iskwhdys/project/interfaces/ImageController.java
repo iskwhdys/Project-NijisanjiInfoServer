@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.iskwhdys.project.application.BroadcasterImageService;
 import com.iskwhdys.project.application.ChannelImageService;
 import com.iskwhdys.project.application.VideoThumbnailService;
 
@@ -18,6 +19,7 @@ public class ImageController {
 
   @Autowired VideoThumbnailService videoThumbnailService;
   @Autowired ChannelImageService channelImageService;
+  @Autowired BroadcasterImageService broadcasterImageService;
 
   @GetMapping("/video/{id}/thumbnail_mini")
   public ResponseEntity<byte[]> getVideoThumbnailMini(@PathVariable String id) {
@@ -38,5 +40,12 @@ public class ImageController {
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.IMAGE_JPEG);
     return new ResponseEntity<>(channelImageService.getThumbnailMini(id), headers, HttpStatus.OK);
+  }
+
+  @GetMapping("/broadcaster/{id}")
+  public ResponseEntity<byte[]> getBroadcaster(@PathVariable String id) {
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.IMAGE_PNG);
+    return new ResponseEntity<>(broadcasterImageService.getThumbnail(id), headers, HttpStatus.OK);
   }
 }
