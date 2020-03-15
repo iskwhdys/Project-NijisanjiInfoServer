@@ -1,32 +1,27 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang=ja xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="UTF-8">
-    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-    <script type="text/javascript">
-
-        $(function () {
-
-            $('#GetChannelLiveData').click(function () {
-                var data = {
-                    id: $("#id").val(),
-                    word: $("#word").val(),
-                    meaning: $("#meaning").val()
-                }
-                $.ajax({
-                    type: 'post',
-                    url: '/',
-                    data: { "id": "GetChannelLiveData" }
-                })
-            })
-        })
-    </script>
     <title>インデックス</title>
 </head>
 
 <body>
-    <button id="GetChannelLiveData">RSSXML取得</button>
+
+	<img src="/api/image/channel/UCdpUojq0KWZCN9bxXnZwz5w/thumbnail" alt="あるすサムネ">
+	<br><a href="/api/image/channel/UCdpUojq0KWZCN9bxXnZwz5w/thumbnail">/api/image/channel/UCdpUojq0KWZCN9bxXnZwz5w/thumbnail</a>
+	<br>
+	<br><a href="http://nijisanji-live.com">http://nijisanji-live.com</a>
+	<br><a href="http://nijisanji-live.com/">http://nijisanji-live.com/</a>
+	<br><a href="http://nijisanji-live.com/channels">http://nijisanji-live.com/channels</a>
+	<br><a href="http://nijisanji-live.com/#/channels">http://nijisanji-live.com/#/channels</a>
+	<br>
+	<br><a href="https://nijisanji-live.com">https://nijisanji-live.com</a>
+	<br><a href="https://nijisanji-live.com/">https://nijisanji-live.com/</a>
+	<br><a href="https://nijisanji-live.com/channels">https://nijisanji-live.com/channels</a>
+	<br><a href="https://nijisanji-live.com/#/channels">https://nijisanji-live.com/#/channels</a>
+    <br>
+    <br><a href="/api/video/live?mode=new">/api/video/live?mode=new</a>
     <br>
 </body>
 
