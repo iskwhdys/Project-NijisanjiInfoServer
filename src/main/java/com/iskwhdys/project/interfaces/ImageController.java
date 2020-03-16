@@ -47,7 +47,7 @@ public class ImageController {
   @GetMapping("/broadcaster/{id}")
   public ResponseEntity<byte[]> getBroadcaster(@PathVariable String id) {
     HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.IMAGE_PNG);
+    headers.setContentType(MediaType.IMAGE_JPEG);
     return new ResponseEntity<>(broadcasterImageService.getThumbnail(id), headers, HttpStatus.OK);
   }
 }

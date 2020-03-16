@@ -20,7 +20,7 @@ public class BroadcasterImageService {
 
   @PostConstruct
   public void init() {
-    cacheImage = new CacheImage(imageDirectory, ".png");
+    cacheImage = new CacheImage(imageDirectory, ".jpg");
   }
 
   public byte[] getThumbnail(String broadcasterId) {
