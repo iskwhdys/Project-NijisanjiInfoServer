@@ -207,8 +207,8 @@ public class VideoSpecification {
     if(intervalMinute == 1) return false;
     //  5分更新：ライブ開始から 20分以内
     if(intervalMinute >= 5 && min < 20) return true;
-    // 20分更新：ライブ開始から1時間以内
-    if(intervalMinute >= 20 && min < 60) return true;
+    // 20分更新：ライブ開始から2時間以内
+    if(intervalMinute >= 20 && min < 60 * 2) return true;
     // 60分更新：常時
     return (intervalMinute >= 60);
 
