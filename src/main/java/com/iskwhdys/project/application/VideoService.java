@@ -32,8 +32,12 @@ public class VideoService {
 
   public void update(int intervalMinute, boolean isAllThumbnailUopdate) {
 
-    // 全チャンネルのRssXmlから動画情報Elementを取得
-    Map<String, Element> elements = ChannelFeedXml.getVideoElement(getAllChannelId());
+    var channels = channelRepository.findByEnabledTrue();
+    // RSSの有効期限が切れたチャンネルを取得
+    // var channels = channelRepository.findByEnabledTrueAndRssExpires();
+    var channelIds = channels.stream().map(ChannelEntity::getId).collect(Collectors.toList());
+
+    Map<String, Element> elements = ChannelFeedXml.getVideoElement(channelIds);
     List<VideoEntity> videos = new ArrayList<>();
 
     // 全動画情報Elementを元にEntityを作成 or 情報の更新
@@ -67,15 +71,13 @@ public class VideoService {
       videos.addAll(updateOtherVideos(videoIds));
     }
 
-    videoRepository.saveAll(videos);
-  }
+//    for (var channel : channels) {
+//      log.info("Channel -> " + channel);
+//      channel.setRssExpires(ChannelFeedXml.getExpires(channel.getId()));
+//    }
+//    channelRepository.saveAll(channels);
 
-  private List<String> getAllChannelId() {
-    return channelRepository
-        .findByEnabledTrue()
-        .stream()
-        .map(ChannelEntity::getId)
-        .collect(Collectors.toList());
+    videoRepository.saveAll(videos);
   }
 
   /**
@@ -119,7 +121,6 @@ public class VideoService {
     return videos;
   }
 
-
   /**
    * 全予約動画の更新
    *
@@ -132,17 +133,15 @@ public class VideoService {
     var videos = videoRepository.findByIdNotInAndTypeAllReserve(videoIds);
     for (var video : videos) {
       video.setEnabled(videoThumbnailService.downloadThumbnails(video));
-      if(Boolean.FALSE.equals(video.getEnabled())) {
+      if (Boolean.FALSE.equals(video.getEnabled())) {
         log.info("DB  Private ->" + video.getType() + " " + video.toString());
-      }
-      else {
+      } else {
         videoSpecification.updateEntity(video);
         log.info("API Private ->" + video.getType() + " " + video.toString());
       }
     }
     return videos;
   }
-
 
   private List<VideoEntity> updateOtherVideos(List<String> videoIds) {
     var videos = videoRepository.findByEnabledTrueAndIdNotIn(videoIds);

@@ -1,9 +1,9 @@
 package com.iskwhdys.project.domain.channel;
 
+import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,6 +21,7 @@ public class ChannelEntity {
   private Integer subscriberCount;
   private String thumbnailUrl;
   private Boolean enabled;
+  private Date rssExpires;
 
   public String toString() {
     return "Channel:[" + getId() + "] [" + getTitle() + "]";

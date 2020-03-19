@@ -2,16 +2,16 @@ package com.iskwhdys.project.infra.youtube;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.client.RestTemplate;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -19,8 +19,15 @@ public class ChannelFeedXml {
 
   private static final String FEEDS_URL = "https://www.youtube.com/feeds/videos.xml";
   private static RestTemplate restTemplate = new RestTemplate();
-
   private ChannelFeedXml() {}
+
+  @SuppressWarnings("deprecation")
+  public static Date getExpires(String id) {
+    String url = FEEDS_URL + "?channel_id=" + id;
+    HttpHeaders header = restTemplate.headForHeaders(url);
+
+    return new Date(header.get("Expires").get(0));
+  }
 
   public static Map<String, Element> getVideoElement(List<String> channelIdList) {
     var result = new HashMap<String, Element>();
