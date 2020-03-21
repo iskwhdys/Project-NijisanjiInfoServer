@@ -8,6 +8,7 @@ import org.springframework.web.client.ResourceAccessException;
 import com.iskwhdys.project.domain.broadcaster.BroadcasterRepository;
 import com.iskwhdys.project.domain.channel.ChannelEntity;
 import com.iskwhdys.project.infra.util.CacheImage;
+import com.iskwhdys.project.infra.util.CacheObject;
 
 @Service
 public class BroadcasterImageService {
@@ -16,6 +17,7 @@ public class BroadcasterImageService {
 
   @Value("${nis.path.image.broadcaster}")
   String imageDirectory;
+
   CacheImage cacheImage;
 
   @PostConstruct
@@ -23,13 +25,13 @@ public class BroadcasterImageService {
     cacheImage = new CacheImage(imageDirectory, ".jpg");
   }
 
-  public byte[] getThumbnail(String broadcasterId) {
+  public CacheObject getThumbnail(String broadcasterId) {
     return getThumbnails(broadcasterId, false);
   }
 
-  private byte[] getThumbnails(String broadcasterId, boolean mini) {
-    byte[] bytes = cacheImage.read(broadcasterId, mini);
-    if (bytes.length != 0) return bytes;
+  private CacheObject getThumbnails(String broadcasterId, boolean mini) {
+    CacheObject obj = cacheImage.read(broadcasterId, mini);
+    if (obj != null) return obj;
 
     var entity = br.findById(broadcasterId);
     if (entity.isEmpty()) {

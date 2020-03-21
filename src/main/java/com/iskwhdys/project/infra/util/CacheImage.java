@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.UnaryOperator;
@@ -13,7 +14,7 @@ import org.springframework.web.client.RestTemplate;
 
 public class CacheImage {
 
-  private Map<String, byte[]> cache = new HashMap<>();
+  private Map<String, CacheObject> cache = new HashMap<>();
   private RestTemplate restTemplate = new RestTemplate();
 
   private UnaryOperator<byte[]> resizeFunction;
@@ -31,16 +32,15 @@ public class CacheImage {
     resizeFunction = resize;
   }
 
-  public byte[] readOriginal(String key) {
-    return read(key,  false);
+  public CacheObject readOriginal(String key) {
+    return read(key, false);
   }
 
-  public byte[] readMini(String key) {
-    return read(key,  true);
+  public CacheObject readMini(String key) {
+    return read(key, true);
   }
 
-  public byte[] read(String key,  boolean mini) {
-
+  public CacheObject read(String key, boolean mini) {
     String file = getFileName(key, mini);
     if (cache.containsKey(file)) {
       return cache.get(file);
@@ -49,14 +49,14 @@ public class CacheImage {
     Path filePath = Paths.get(directory, file);
     if (Files.exists(filePath)) {
       try {
-        cache.put(file, Files.readAllBytes(filePath));
+        put(file, Files.readAllBytes(filePath));
       } catch (IOException e) {
         throw new ResourceAccessException("File read error", e);
       }
       return cache.get(file);
     }
 
-    return new byte[0];
+    return null;
   }
 
   public boolean download(String key, String url) {
@@ -66,13 +66,13 @@ public class CacheImage {
       String file = getFileName(key, false);
       byte[] bytes = restTemplate.getForObject(url, byte[].class);
       Files.write(Paths.get(directory, file), bytes, StandardOpenOption.CREATE);
-      cache.put(file, bytes);
+      put(file, bytes);
 
       if (resizeFunction != null) {
         file = getFileName(key, true);
         bytes = resizeFunction.apply(bytes);
         Files.write(Paths.get(directory, file), bytes, StandardOpenOption.CREATE);
-        cache.put(file, bytes);
+        put(file, bytes);
       }
     } catch (Exception e) {
       return false;
@@ -80,6 +80,9 @@ public class CacheImage {
     return true;
   }
 
+  private void put(String key, byte[] bytes) {
+    cache.put(key, new CacheObject(bytes, new Date()));
+  }
 
   private String getFileName(String key, boolean mini) {
     String file = key + extension;

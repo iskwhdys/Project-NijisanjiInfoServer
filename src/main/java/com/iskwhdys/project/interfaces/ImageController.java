@@ -10,9 +10,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.WebRequest;
 import com.iskwhdys.project.application.BroadcasterImageService;
 import com.iskwhdys.project.application.ChannelImageService;
 import com.iskwhdys.project.application.VideoThumbnailService;
+import com.iskwhdys.project.infra.util.CacheObject;
 
 @CrossOrigin
 @RestController
@@ -24,30 +26,34 @@ public class ImageController {
   @Autowired BroadcasterImageService broadcasterImageService;
 
   @GetMapping("/video/{id}/thumbnail_mini")
-  public ResponseEntity<byte[]> getVideoThumbnailMini(@PathVariable String id) {
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.IMAGE_JPEG);
-    return new ResponseEntity<>(videoThumbnailService.getThumbnailMini(id), headers, HttpStatus.OK);
+  public ResponseEntity<byte[]> getVideoThumbnailMini(WebRequest swr, @PathVariable String id) {
+    return getResponse(swr, videoThumbnailService.getThumbnailMini(id));
   }
 
   @GetMapping("/channel/{id}/thumbnail")
-  public ResponseEntity<byte[]> getChannelThumbnail(@PathVariable String id) {
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.IMAGE_JPEG);
-    return new ResponseEntity<>(channelImageService.getThumbnail(id), headers, HttpStatus.OK);
+  public ResponseEntity<byte[]> getChannelThumbnail(WebRequest swr, @PathVariable String id) {
+    return getResponse(swr, channelImageService.getThumbnail(id));
   }
 
   @GetMapping("/channel/{id}/thumbnail_mini")
-  public ResponseEntity<byte[]> getChannelThumbnailMini(@PathVariable String id) {
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.IMAGE_JPEG);
-    return new ResponseEntity<>(channelImageService.getThumbnailMini(id), headers, HttpStatus.OK);
+  public ResponseEntity<byte[]> getChannelThumbnailMini(WebRequest swr, @PathVariable String id) {
+    return getResponse(swr, channelImageService.getThumbnailMini(id));
   }
 
   @GetMapping("/broadcaster/{id}")
-  public ResponseEntity<byte[]> getBroadcaster(@PathVariable String id) {
+  public ResponseEntity<byte[]> getBroadcaster(WebRequest swr, @PathVariable String id) {
+    return getResponse(swr, broadcasterImageService.getThumbnail(id));
+  }
+
+  private ResponseEntity<byte[]> getResponse(WebRequest swr, CacheObject obj) {
     HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.IMAGE_JPEG);
-    return new ResponseEntity<>(broadcasterImageService.getThumbnail(id), headers, HttpStatus.OK);
+
+    if (swr.checkNotModified(obj.getLastUpdate().getTime())) {
+      return new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
+    } else {
+      headers.setContentType(MediaType.IMAGE_JPEG);
+      headers.setLastModified(obj.getLastUpdate().getTime());
+      return new ResponseEntity<>(obj.getBytes(), headers, HttpStatus.OK);
+    }
   }
 }

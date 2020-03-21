@@ -9,6 +9,7 @@ import org.springframework.web.client.ResourceAccessException;
 import com.iskwhdys.project.domain.video.VideoEntity;
 import com.iskwhdys.project.domain.video.VideoRepository;
 import com.iskwhdys.project.infra.util.CacheImage;
+import com.iskwhdys.project.infra.util.CacheObject;
 import com.iskwhdys.project.infra.util.ImageEditor;
 
 @Service
@@ -25,9 +26,9 @@ public class VideoThumbnailService {
     cacheImage = new CacheImage(imageDirectory, ".jpg", this::resize);
   }
 
-  public byte[] getThumbnailMini(String videoId) {
-    byte[] bytes = cacheImage.readMini(videoId);
-    if (bytes.length != 0) return bytes;
+  public CacheObject getThumbnailMini(String videoId) {
+    CacheObject obj = cacheImage.readMini(videoId);
+    if (obj != null) return obj;
 
     var entity = vr.findById(videoId);
     if (entity.isEmpty()) {

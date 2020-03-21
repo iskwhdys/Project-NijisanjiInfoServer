@@ -9,6 +9,7 @@ import org.springframework.web.client.ResourceAccessException;
 import com.iskwhdys.project.domain.channel.ChannelEntity;
 import com.iskwhdys.project.domain.channel.ChannelRepository;
 import com.iskwhdys.project.infra.util.CacheImage;
+import com.iskwhdys.project.infra.util.CacheObject;
 import com.iskwhdys.project.infra.util.ImageEditor;
 
 @Service
@@ -25,17 +26,17 @@ public class ChannelImageService {
     cacheImage = new CacheImage(imageDirectory, ".jpg", this::resize);
   }
 
-  public byte[] getThumbnailMini(String channelId) {
+  public CacheObject getThumbnailMini(String channelId) {
     return getThumbnails(channelId, true);
   }
 
-  public byte[] getThumbnail(String channelId) {
+  public CacheObject getThumbnail(String channelId) {
     return getThumbnails(channelId, false);
   }
 
-  private byte[] getThumbnails(String channelId, boolean mini) {
-    byte[] bytes = cacheImage.read(channelId, mini);
-    if (bytes.length != 0) return bytes;
+  private CacheObject getThumbnails(String channelId, boolean mini) {
+    CacheObject obj = cacheImage.read(channelId, mini);
+    if (obj != null) return obj;
 
     var entity = cr.findById(channelId);
     if (entity.isEmpty()) {
