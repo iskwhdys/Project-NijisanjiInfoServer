@@ -3,13 +3,11 @@ package com.iskwhdys.project.application;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import com.iskwhdys.project.domain.channel.ChannelRepository;
 import com.iskwhdys.project.domain.video.VideoEntity;
 import com.iskwhdys.project.domain.video.VideoRepository;
 import com.iskwhdys.project.infra.twitter.TwitterApi;
 import com.twitter.twittertext.TwitterTextParser;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -65,7 +63,7 @@ public class TweetService {
       result.append("\r\n");
       result.append("\r\n");
       result.append("～その他の配信情報はこちら～\r\n");
-      result.append("にじさんじライブ新着 http://nijisanji-live.com");
+      result.append("にじさんじライブ新着 https://nijisanji-live.com");
     }
 
     return result.toString();

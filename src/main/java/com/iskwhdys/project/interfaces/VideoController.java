@@ -56,7 +56,7 @@ public class VideoController {
 
     if ("new".equals(mode)) {
       return vr.findByEnabledTrueAndTypeEqualsAndLiveStartBetweenOrderByLiveStartDesc(
-          VideoEntity.TYPE_LIVE_ARCHIVE, getDaysDate(1), new Date());
+          VideoEntity.TYPE_LIVE_ARCHIVE, getDaysDate(0.5), new Date());
     } else if ("get".equals(mode)) {
       return vr.findTop30ByEnabledTrueAndTypeEqualsAndLiveStartBeforeOrderByLiveStartDesc(
           VideoEntity.TYPE_LIVE_ARCHIVE, Common.toDate(from));
@@ -101,13 +101,13 @@ public class VideoController {
     } else if ("get".equals(mode)) {
       return vr.findTop10ByEnabledTrueAndChannelIdEqualsAndUploadDateBeforeOrderByUploadDateDesc(
           channelId, Common.toDate(from));
-    }
+     }
 
     return new ArrayList<>();
 
   }
 
-  private Date getDaysDate(int day) {
-    return new Date(new Date().getTime() - (1000 * 60 * 60 * 24 * day));
+  private Date getDaysDate(double day) {
+    return new Date(new Date().getTime() - (int)(1000 * 60 * 60 * 24 * day));
   }
 }
