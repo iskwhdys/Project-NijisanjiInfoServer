@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import com.iskwhdys.project.application.ChannelService;
+import com.iskwhdys.project.application.SitemapService;
 import com.iskwhdys.project.application.TweetService;
 import com.iskwhdys.project.application.VideoService;
 import com.iskwhdys.project.infra.youtube.YoutubeApi;
@@ -24,6 +25,7 @@ public class ProcessController {
   @Autowired ChannelService channelService;
   @Autowired VideoService videoService;
   @Autowired TweetService tweetService;
+  @Autowired SitemapService sitemapService;
 
   @Autowired YoutubeApi youtubeApi;
 
@@ -37,6 +39,7 @@ public class ProcessController {
     if (min == 0) {
       log.info("cronPerMinute 60 start");
       videoService.update(60, false);
+      sitemapService.update();
       log.info("cronPerMinute 60 end");
     } else if (min % 20 == 0) {
       log.info("cronPerMinute 20 start");
@@ -82,6 +85,7 @@ public class ProcessController {
 
     switch (name) {
       case "test":
+        sitemapService.update();
         break;
 
       case "update":
