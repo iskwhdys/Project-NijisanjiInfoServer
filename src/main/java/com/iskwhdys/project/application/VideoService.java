@@ -128,14 +128,14 @@ public class VideoService {
    * @return
    */
   private List<VideoEntity> updateAllReserveVideos(List<String> videoIds, int intervalMinute) {
-    if (intervalMinute < 60 * 24) return new ArrayList<>();
+    if (intervalMinute < 60) return new ArrayList<>();
 
     var videos = videoRepository.findByIdNotInAndTypeAllReserve(videoIds);
     for (var video : videos) {
       video.setEnabled(videoThumbnailService.downloadThumbnails(video));
       if (Boolean.FALSE.equals(video.getEnabled())) {
         log.info("DB  Private ->" + video.getType() + " " + video.toString());
-      } else {
+      } else if(intervalMinute >= 60 * 24){
         videoSpecification.updateEntity(video);
         log.info("API Private ->" + video.getType() + " " + video.toString());
       }
