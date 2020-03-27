@@ -4,6 +4,7 @@
         <Property name="app_name">NijisanjiInfoServer</Property>
         <Property name="date">%d{yyyy-MM-dd HH:mm:ss.SSS}</Property>
         <Property name="daily_log">logs/app_${app_name}_%d{yyyy-MM-dd}.log</Property>
+        <Property name="daily_gz">logs/%d{yyyyMM}/app_${app_name}_%d{yyyy-MM-dd}.log</Property>
         <Property name="monthly_log">logs/app_monthly_${app_name}_%d{yyyy-MM}.log</Property>
         <Property name="error_daily_log">logs/app_error_${app_name}_%d{yyyy-MM-dd}.log</Property>
     </Properties>
@@ -17,7 +18,7 @@
         <RollingFile
             name="File"
             fileName="logs/app.log"
-            filePattern="${daily_log}.gz"
+            filePattern="${daily_gz}.gz"
         >
             <PatternLayout pattern="${date}, [${app_name}], [ %-5level ], %logger{10}, %msg %n" />
             <Policies>

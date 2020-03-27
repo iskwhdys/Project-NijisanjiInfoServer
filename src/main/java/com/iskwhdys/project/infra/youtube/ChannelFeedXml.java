@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
-import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,33 +19,43 @@ public class ChannelFeedXml {
 
   private static final String FEEDS_URL = "https://www.youtube.com/feeds/videos.xml";
   private static RestTemplate restTemplate = new RestTemplate();
+  private static Map<String, ResponseEntity<byte[]>> history = new HashMap<>();
+
   private ChannelFeedXml() {}
-
-  @SuppressWarnings("deprecation")
-  public static Date getExpires(String id) {
-    String url = FEEDS_URL + "?channel_id=" + id;
-    HttpHeaders header = restTemplate.headForHeaders(url);
-
-    return new Date(header.get("Expires").get(0));
-  }
 
   public static Map<String, Element> getVideoElement(List<String> channelIdList) {
     var result = new HashMap<String, Element>();
 
     for (var channelId : channelIdList) {
 
-      String url = FEEDS_URL + "?channel_id=" + channelId;
+      ResponseEntity<byte[]> bytes = getXmlBytes(channelId);
 
-      byte[] bytes = restTemplate.getForObject(url, byte[].class);
-
-      var map = bytesToIdAndElementMap(bytes);
-
+      var map = bytesToIdAndElementMap(bytes.getBody());
       if (map != null) {
         result.putAll(map);
+        history.put(channelId, bytes);
       }
     }
 
     return result;
+  }
+
+  private static ResponseEntity<byte[]> getXmlBytes(String id) {
+
+    String url = FEEDS_URL + "?channel_id=" + id;
+    ResponseEntity<byte[]> bytes;
+
+    if (history.containsKey(id)) {
+      if (new Date().getTime() > history.get(id).getHeaders().getExpires()) {
+        log.info("XML Update -> " + id);
+        bytes = restTemplate.getForEntity(url, byte[].class);
+      } else {
+        bytes = history.get(id);
+      }
+    } else {
+      bytes = restTemplate.getForEntity(url, byte[].class);
+    }
+    return bytes;
   }
 
   private static Map<String, Element> bytesToIdAndElementMap(byte[] xmlBytes) {

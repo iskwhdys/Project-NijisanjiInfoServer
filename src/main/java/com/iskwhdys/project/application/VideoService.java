@@ -38,6 +38,7 @@ public class VideoService {
     var channelIds = channels.stream().map(ChannelEntity::getId).collect(Collectors.toList());
 
     Map<String, Element> elements = ChannelFeedXml.getVideoElement(channelIds);
+
     List<VideoEntity> videos = new ArrayList<>();
 
     // 全動画情報Elementを元にEntityを作成 or 情報の更新
