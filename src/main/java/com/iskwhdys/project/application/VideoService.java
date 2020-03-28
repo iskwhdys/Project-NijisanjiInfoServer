@@ -1,9 +1,11 @@
 package com.iskwhdys.project.application;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.jdom2.DataConversionException;
 import org.jdom2.Element;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,52 +35,78 @@ public class VideoService {
   public void update(int intervalMinute, boolean isAllThumbnailUopdate) {
 
     var channels = channelRepository.findByEnabledTrue();
-    // RSSの有効期限が切れたチャンネルを取得
-    // var channels = channelRepository.findByEnabledTrueAndRssExpires();
     var channelIds = channels.stream().map(ChannelEntity::getId).collect(Collectors.toList());
 
     Map<String, Element> elements = ChannelFeedXml.getVideoElement(channelIds);
-
     List<VideoEntity> videos = new ArrayList<>();
 
-    // 全動画情報Elementを元にEntityを作成 or 情報の更新
     for (var set : elements.entrySet()) {
       Element element = set.getValue();
-
       var video = videoRepository.findById(set.getKey()).orElse(null);
+
+      boolean added = false;
       if (video == null) {
         video = createNewVideo(element);
-      } else if (video.isUpload() || video.isPremierUpload()) {
-        updateUploadVideo(element, video, intervalMinute);
-      } else if (video.isLiveArchive()) {
-        updateLiveArchiveVideo(element, video, intervalMinute);
-      } else if (video.isPremierLive() || video.isLiveLive()) {
-        updateLiveVideo(element, video, intervalMinute);
-      } else if (video.isPremierReserve() || video.isLiveReserve()) {
-        updateReserveVideo(element, video, intervalMinute);
-      } else if (video.isUnknown()) {
-        updateUnknownVideo(element, video);
+      } else {
+        if(uncacheElement(element)) {
+          videoFactory.updateViaXmlElement(element, video);
+          videos.add(video);
+          added = true;
+        }
+        video = updateVideo(video, intervalMinute);
       }
-      videos.add(video);
+
+      if(video != null && !added) {
+        video.setUpdateDate(new Date());
+        videos.add(video);
+      }
     }
 
+    int xmlSize = videos.size();
     var videoIds = videos.stream().map(VideoEntity::getId).collect(Collectors.toList());
-    videos.addAll(updateNoXmlLives(videoIds, intervalMinute));
-    videos.addAll(updateNoXmlTodayVideos(videoIds, intervalMinute));
-    videos.addAll(updateAllReserveVideos(videoIds, intervalMinute));
+    videos.addAll(updateNoXmlVideos(videoIds, intervalMinute, isAllThumbnailUopdate));
 
-    if (isAllThumbnailUopdate) {
-      videoIds = videos.stream().map(VideoEntity::getId).collect(Collectors.toList());
-      videos.addAll(updateOtherVideos(videoIds));
-    }
-
-//    for (var channel : channels) {
-//      log.info("Channel -> " + channel);
-//      channel.setRssExpires(ChannelFeedXml.getExpires(channel.getId()));
-//    }
-//    channelRepository.saveAll(channels);
+    log.info("VideoCount:" + xmlSize + "/" + videos.size());
 
     videoRepository.saveAll(videos);
+  }
+
+  private boolean uncacheElement(Element element) {
+    try {
+      return  !element.getAttribute("cached").getBooleanValue();
+    } catch (DataConversionException e) {
+      log.error(e.getMessage(), e);
+      return true;
+    }
+  }
+
+  private VideoEntity updateVideo(VideoEntity video, int intervalMinute) {
+    if (video.isUpload() || video.isPremierUpload()) {
+      return  updateUploadVideo(video, intervalMinute);
+    } else if (video.isLiveArchive()) {
+      return updateLiveArchiveVideo(video, intervalMinute);
+    } else if (video.isPremierLive() || video.isLiveLive()) {
+      return updateLiveVideo(video, intervalMinute);
+    } else if (video.isPremierReserve() || video.isLiveReserve()) {
+      return updateReserveVideo(video, intervalMinute);
+    } else if (video.isUnknown()) {
+      return updateUnknownVideo(video);
+    }
+    return null;
+  }
+
+  private List<VideoEntity> updateNoXmlVideos(
+      List<String> xmlIds, int intervalMinute, boolean isAllThumbnailUopdate) {
+    List<VideoEntity> videos = new ArrayList<>();
+    videos.addAll(updateNoXmlLives(xmlIds, intervalMinute));
+    videos.addAll(updateNoXmlTodayVideos(xmlIds, intervalMinute));
+    videos.addAll(updateAllReserveVideos(xmlIds, intervalMinute));
+
+    if (isAllThumbnailUopdate) {
+      xmlIds = videos.stream().map(VideoEntity::getId).collect(Collectors.toList());
+      videos.addAll(updateOtherVideos(xmlIds));
+    }
+    return videos;
   }
 
   /**
@@ -112,7 +140,7 @@ public class VideoService {
    * @return
    */
   private List<VideoEntity> updateNoXmlTodayVideos(List<String> videoIds, int intervalMinute) {
-    if (intervalMinute < 20) return new ArrayList<>();
+    if (intervalMinute < 60) return new ArrayList<>();
 
     var videos = videoRepository.findByIdNotInAndTodayVideos(videoIds);
     for (var video : videos) {
@@ -136,7 +164,7 @@ public class VideoService {
       video.setEnabled(videoThumbnailService.downloadThumbnails(video));
       if (Boolean.FALSE.equals(video.getEnabled())) {
         log.info("DB  Private ->" + video.getType() + " " + video.toString());
-      } else if(intervalMinute >= 60 * 24){
+      } else if (intervalMinute >= 60 * 24) {
         videoSpecification.updateEntity(video);
         log.info("API Private ->" + video.getType() + " " + video.toString());
       }
@@ -166,30 +194,31 @@ public class VideoService {
     return video;
   }
 
-  private void updateUploadVideo(Element element, VideoEntity video, int intervalMinute) {
-    videoFactory.updateViaXmlElement(element, video);
+  private VideoEntity updateUploadVideo(VideoEntity video, int intervalMinute) {
 
     if (video.uploadElapsedMinute() < 60 * 24 && intervalMinute >= 60) {
       // 公開して24時間以内の動画は、1時間おきにサムネイルを更新する
       video.setEnabled(videoThumbnailService.downloadThumbnails(video));
       log.debug("XML Thumbnail -> " + video.getType() + " " + video.toString());
+      return video;
+    } else {
+      return null;
     }
   }
 
-  private void updateLiveArchiveVideo(Element element, VideoEntity video, int intervalMinute) {
-
-    videoFactory.updateViaXmlElement(element, video);
+  private VideoEntity updateLiveArchiveVideo(VideoEntity video, int intervalMinute) {
 
     if (video.liveElapsedMinute() < 60 * 24 && intervalMinute >= 60) {
       // 配信から24時間以内の動画は、1時間おきにサムネイルを更新する
       video.setEnabled(videoThumbnailService.downloadThumbnails(video));
       log.debug("XML Thumbnail -> " + video.getType() + " " + video.toString());
+      return video;
+    } else {
+      return null;
     }
   }
 
-  private void updateLiveVideo(Element element, VideoEntity video, int intervalMinute) {
-
-    videoFactory.updateViaXmlElement(element, video);
+  private VideoEntity updateLiveVideo(VideoEntity video, int intervalMinute) {
 
     if (videoSpecification.isUpdateLive(video, intervalMinute)) {
       videoThumbnailService.downloadThumbnails(video);
@@ -202,11 +231,11 @@ public class VideoService {
     } else {
       log.debug("XML Live -> " + video.getType() + " " + video.toString());
     }
+    return video;
   }
 
-  private void updateReserveVideo(Element element, VideoEntity video, int intervalMinute) {
+  private VideoEntity updateReserveVideo(VideoEntity video, int intervalMinute) {
 
-    videoFactory.updateViaXmlElement(element, video);
     if (intervalMinute >= 60) {
       video.setEnabled(videoThumbnailService.downloadThumbnails(video));
     }
@@ -221,12 +250,13 @@ public class VideoService {
       }
       log.info("API Reserve -> " + video.getType() + " " + video.toString());
     }
+    return  video;
   }
 
-  private void updateUnknownVideo(Element element, VideoEntity video) {
-    videoFactory.updateViaXmlElement(element, video);
+  private VideoEntity updateUnknownVideo(VideoEntity video) {
     videoThumbnailService.downloadThumbnails(video);
     videoSpecification.updateEntity(video);
     log.info("API Unknown -> " + video.getType() + " " + video.toString());
+    return video;
   }
 }

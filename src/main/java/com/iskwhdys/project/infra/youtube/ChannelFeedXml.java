@@ -32,6 +32,10 @@ public class ChannelFeedXml {
 
       var map = bytesToIdAndElementMap(bytes.getBody());
       if (map != null) {
+        String cached = String.valueOf(isCached(channelId));
+        for (Element element : map.values()) {
+          element.setAttribute("cached", cached);
+        }
         result.putAll(map);
         history.put(channelId, bytes);
       }
@@ -40,22 +44,20 @@ public class ChannelFeedXml {
     return result;
   }
 
-  private static ResponseEntity<byte[]> getXmlBytes(String id) {
-
-    String url = FEEDS_URL + "?channel_id=" + id;
-    ResponseEntity<byte[]> bytes;
-
-    if (history.containsKey(id)) {
-      if (new Date().getTime() > history.get(id).getHeaders().getExpires()) {
-        log.info("XML Update -> " + id);
-        bytes = restTemplate.getForEntity(url, byte[].class);
-      } else {
-        bytes = history.get(id);
-      }
+  private static ResponseEntity<byte[]> getXmlBytes(String channelId) {
+    if (isCached(channelId)) {
+      return history.get(channelId);
     } else {
-      bytes = restTemplate.getForEntity(url, byte[].class);
+      return restTemplate.getForEntity(FEEDS_URL + "?channel_id=" + channelId, byte[].class);
     }
-    return bytes;
+  }
+
+  private static boolean isCached(String channelId) {
+    if (history.containsKey(channelId)) {
+      return (new Date().getTime() < history.get(channelId).getHeaders().getExpires());
+    } else {
+      return false;
+    }
   }
 
   private static Map<String, Element> bytesToIdAndElementMap(byte[] xmlBytes) {
