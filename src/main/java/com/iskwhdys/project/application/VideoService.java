@@ -5,13 +5,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.jdom2.DataConversionException;
 import org.jdom2.Element;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.iskwhdys.project.domain.channel.ChannelEntity;
-import com.iskwhdys.project.domain.channel.ChannelRepository;
 import com.iskwhdys.project.domain.video.VideoEntity;
 import com.iskwhdys.project.domain.video.VideoFactory;
 import com.iskwhdys.project.domain.video.VideoRepository;
@@ -24,20 +21,17 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class VideoService {
 
-  @Autowired ChannelRepository channelRepository;
   @Autowired VideoRepository videoRepository;
 
   @Autowired VideoSpecification videoSpecification;
   @Autowired VideoFactory videoFactory;
   @Autowired VideoThumbnailService videoThumbnailService;
   @Autowired TweetService tweetService;
+  @Autowired ChannelService channelService;
 
   public void update(int intervalMinute, boolean isAllThumbnailUopdate) {
 
-    var channels = channelRepository.findByEnabledTrue();
-    var channelIds = channels.stream().map(ChannelEntity::getId).collect(Collectors.toList());
-
-    Map<String, Element> elements = ChannelFeedXml.getVideoElement(channelIds);
+    Map<String, Element> elements = ChannelFeedXml.getVideoElement(channelService.getIds());
     List<VideoEntity> videos = new ArrayList<>();
 
     for (var set : elements.entrySet()) {
@@ -48,7 +42,7 @@ public class VideoService {
       if (video == null) {
         video = createNewVideo(element);
       } else {
-        if(uncacheElement(element)) {
+        if (ChannelFeedXml.isUncachedElement(element)) {
           videoFactory.updateViaXmlElement(element, video);
           videos.add(video);
           added = true;
@@ -56,7 +50,7 @@ public class VideoService {
         video = updateVideo(video, intervalMinute);
       }
 
-      if(video != null && !added) {
+      if (video != null && !added) {
         video.setUpdateDate(new Date());
         videos.add(video);
       }
@@ -71,18 +65,9 @@ public class VideoService {
     videoRepository.saveAll(videos);
   }
 
-  private boolean uncacheElement(Element element) {
-    try {
-      return  !element.getAttribute("cached").getBooleanValue();
-    } catch (DataConversionException e) {
-      log.error(e.getMessage(), e);
-      return true;
-    }
-  }
-
   private VideoEntity updateVideo(VideoEntity video, int intervalMinute) {
     if (video.isUpload() || video.isPremierUpload()) {
-      return  updateUploadVideo(video, intervalMinute);
+      return updateUploadVideo(video, intervalMinute);
     } else if (video.isLiveArchive()) {
       return updateLiveArchiveVideo(video, intervalMinute);
     } else if (video.isPremierLive() || video.isLiveLive()) {
@@ -250,7 +235,7 @@ public class VideoService {
       }
       log.info("API Reserve -> " + video.getType() + " " + video.toString());
     }
-    return  video;
+    return video;
   }
 
   private VideoEntity updateUnknownVideo(VideoEntity video) {

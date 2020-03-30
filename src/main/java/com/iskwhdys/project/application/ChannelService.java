@@ -1,11 +1,10 @@
 package com.iskwhdys.project.application;
 
 import java.util.List;
-
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import com.iskwhdys.project.domain.channel.ChannelEntity;
 import com.iskwhdys.project.domain.channel.ChannelRepository;
 import com.iskwhdys.project.domain.channel.ChannelSpecification;
@@ -45,5 +44,11 @@ public class ChannelService {
     }
     channelRepository.saveAll(channels);
     return channels;
+  }
+
+  public List<String> getIds(){
+    var channels = channelRepository.findByEnabledTrue();
+    return channels.stream().map(ChannelEntity::getId).collect(Collectors.toList());
+
   }
 }

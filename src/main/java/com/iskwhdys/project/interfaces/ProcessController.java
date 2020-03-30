@@ -85,7 +85,6 @@ public class ProcessController {
 
     switch (name) {
       case "test":
-        sitemapService.update();
         break;
 
       case "update":
