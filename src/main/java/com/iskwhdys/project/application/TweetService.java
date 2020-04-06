@@ -29,20 +29,25 @@ public class TweetService {
   }
 
   public void tweet(VideoEntity video) {
-    String msg = getTweetMessage(video, true, true);
-    if (TwitterTextParser.parseTweet(msg).isValid) {
-      twitterApi.tweet(msg);
-      return;
-    }
+    try {
+      String msg = getTweetMessage(video, true, true);
+      if (TwitterTextParser.parseTweet(msg).isValid) {
+        twitterApi.tweet(msg);
+        return;
+      }
 
-    msg = getTweetMessage(video, false, true);
-    if (TwitterTextParser.parseTweet(msg).isValid) {
-      twitterApi.tweet(msg);
-      return;
-    }
+      msg = getTweetMessage(video, false, true);
+      if (TwitterTextParser.parseTweet(msg).isValid) {
+        twitterApi.tweet(msg);
+        return;
+      }
 
-    msg = getTweetMessage(video, false, false);
-    twitterApi.tweet(msg);
+      msg = getTweetMessage(video, false, false);
+      twitterApi.tweet(msg);
+
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    }
   }
 
   private String getTweetMessage(VideoEntity video, boolean useChannel, boolean use2j3jInfo) {
