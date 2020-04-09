@@ -27,6 +27,7 @@ public class BroadcasterEntity {
   private Date endDate;
   private String official;
   private String icon;
+  private String wiki;
 
   public String toString() {
     return "Broadcaster:[" + getId() + "] [" + getName() + "]";

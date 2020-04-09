@@ -39,8 +39,8 @@ public class VideoController {
               VideoEntity.TYPE_UPLOADS, getDaysDate(2), new Date());
       if (list.isEmpty()) {
         list =
-            vr.findByEnabledTrueAndTypeInAndUploadDateBetweenOrderByUploadDateDesc(
-                VideoEntity.TYPE_UPLOADS, getDaysDate(4), new Date());
+            vr.findTop10ByEnabledTrueAndTypeInAndUploadDateBeforeOrderByUploadDateDesc(
+                VideoEntity.TYPE_UPLOADS, new Date());
       }
       return list;
     } else if ("get".equals(mode)) {
@@ -55,9 +55,11 @@ public class VideoController {
       @RequestParam String mode, @RequestParam(required = false) String from) {
 
     if ("new".equals(mode)) {
-      return vr.findByEnabledTrueAndTypeEqualsAndLiveStartBetweenOrderByLiveStartDesc(
-          VideoEntity.TYPE_LIVE_ARCHIVE, getDaysDate(0.5), new Date());
-    } else if ("get".equals(mode)) {
+      return vr.findTop30ByEnabledTrueAndTypeEqualsAndLiveStartBeforeOrderByLiveStartDesc(
+          VideoEntity.TYPE_LIVE_ARCHIVE, new Date());
+    }
+
+    else if ("get".equals(mode)) {
       return vr.findTop30ByEnabledTrueAndTypeEqualsAndLiveStartBeforeOrderByLiveStartDesc(
           VideoEntity.TYPE_LIVE_ARCHIVE, Common.toDate(from));
     }

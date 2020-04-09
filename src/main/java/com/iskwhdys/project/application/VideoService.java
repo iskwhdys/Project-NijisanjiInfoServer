@@ -29,6 +29,31 @@ public class VideoService {
   @Autowired TweetService tweetService;
   @Autowired ChannelService channelService;
 
+  public void xmlUpdate() {
+
+    Map<String, Element> elements = ChannelFeedXml.getVideoElement(channelService.getIds());
+    List<VideoEntity> videos = new ArrayList<>();
+
+    for (var set : elements.entrySet()) {
+      Element element = set.getValue();
+      var video = videoRepository.findById(set.getKey()).orElse(null);
+
+      if (video == null) {
+        video = videoFactory.createViaXmlElement(element);
+        videoThumbnailService.downloadThumbnails(video);
+      } else {
+        videoFactory.updateViaXmlElement(element, video);
+      }
+
+      video.setUpdateDate(new Date());
+      video.setEnabled(true);
+      video.setType(VideoEntity.TYPE_UPLOAD);
+      videos.add(video);
+    }
+
+    videoRepository.saveAll(videos);
+  }
+
   public void update(int intervalMinute, boolean isAllThumbnailUopdate) {
 
     Map<String, Element> elements = ChannelFeedXml.getVideoElement(channelService.getIds());

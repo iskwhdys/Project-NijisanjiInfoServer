@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.iskwhdys.project.domain.channel.ChannelEntity;
 import com.iskwhdys.project.domain.channel.ChannelRepository;
 import com.iskwhdys.project.domain.channel.ChannelSpecification;
+import com.iskwhdys.project.infra.youtube.ChannelFeedXml;
 
 @Service
 @Transactional
@@ -44,6 +45,14 @@ public class ChannelService {
     }
     channelRepository.saveAll(channels);
     return channels;
+  }
+
+  public void xmlUpdate() {
+    var channels = channelRepository.findAll();
+    for (var channel : channels) {
+      channel.setTitle(ChannelFeedXml.getChannelTitle(channel.getId()));
+    }
+    channelRepository.saveAll(channels);
   }
 
   public List<String> getIds(){

@@ -104,6 +104,11 @@ public class ProcessController {
         tweetService.tweet(value);
         break;
 
+      case "xmlUpdate":
+        channelService.xmlUpdate();
+        videoService.xmlUpdate();
+        break;
+
       default:
         return name;
     }

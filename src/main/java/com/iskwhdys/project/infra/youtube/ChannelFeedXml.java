@@ -26,6 +26,16 @@ public class ChannelFeedXml {
 
   private ChannelFeedXml() {}
 
+  public static String getChannelTitle(String id) {
+    ResponseEntity<byte[]> bytes;
+    if (isCachedFeed(id)) {
+      bytes = feedHistory.get(id);
+    } else {
+      bytes = restTemplate.getForEntity(FEEDS_URL + id, byte[].class);
+    }
+    return bytesToChannelTitle(bytes.getBody());
+  }
+
   public static Map<String, Element> getVideoElement(List<String> channelIdList) {
     var result = new HashMap<String, Element>();
 
@@ -100,5 +110,24 @@ public class ChannelFeedXml {
       }
     }
     return map;
+  }
+
+  private static String bytesToChannelTitle(byte[] xmlBytes) {
+
+    var is = new ByteArrayInputStream(xmlBytes);
+    Element root = null;
+    try {
+      root = new SAXBuilder().build(is).getRootElement();
+    } catch (JDOMException | IOException e) {
+      log.error(e.toString(), e);
+      return null;
+    }
+
+    return root.getChildren()
+        .stream()
+        .filter(p -> p.getName().contains("title"))
+        .collect(Collectors.toList())
+        .get(0)
+        .getValue();
   }
 }
