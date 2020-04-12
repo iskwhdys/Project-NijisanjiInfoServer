@@ -193,11 +193,11 @@ public class VideoSpecification {
     //  1分更新：開始予定から10分以内
     if (intervalMinute >= 1 && min < 10) return true;
     //  5分更新：開始予定から30分以内
-    if (intervalMinute >= 5 && min < 30) return true;
+    if (intervalMinute >= 5 && min < 60 * 4) return true;
     // 20分更新：開始予定から1時間以内
-    if (intervalMinute >= 20 && min < 60) return true;
+    if (intervalMinute >= 20 && min < 60 * 12) return true;
     // 60分更新：開始予定から24時間以内
-    return (intervalMinute >= 60 &&  min < 60 * 24);
+    return (intervalMinute >= 60  &&  min < 60 * 24);
   }
 
   public boolean isUpdateLive(VideoEntity video, int intervalMinute) {
