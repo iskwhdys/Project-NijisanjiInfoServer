@@ -21,6 +21,7 @@ public class BroadcasterEntity {
   private String kana;
   private String group;
   private String twitter;
+  private String twitter2;
   private String youtube;
   private String youtube2;
   private Date startDate;
