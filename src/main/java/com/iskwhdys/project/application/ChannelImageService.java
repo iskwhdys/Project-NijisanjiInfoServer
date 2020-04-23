@@ -23,7 +23,7 @@ public class ChannelImageService {
 
   @PostConstruct
   public void init() {
-    cacheImage = new CacheImage(imageDirectory, ".jpg", this::resize);
+    cacheImage = new CacheImage(imageDirectory, ".jpg", this::resize, true);
   }
 
   public CacheObject getThumbnailMini(String channelId) {

@@ -23,7 +23,7 @@ public class VideoThumbnailService {
 
   @PostConstruct
   public void init() {
-    cacheImage = new CacheImage(imageDirectory, ".jpg", this::resize);
+    cacheImage = new CacheImage(imageDirectory, ".jpg", this::resize, false);
   }
 
   public CacheObject getThumbnailMini(String videoId) {

@@ -11,7 +11,9 @@ import java.util.Map;
 import java.util.function.UnaryOperator;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class CacheImage {
 
   private Map<String, CacheObject> cache = new HashMap<>();
@@ -20,16 +22,18 @@ public class CacheImage {
   private UnaryOperator<byte[]> resizeFunction;
   private String directory;
   private String extension;
+  private boolean isOriginCache;
 
   public CacheImage(String dir, String ext) {
     directory = dir;
     extension = ext;
   }
 
-  public CacheImage(String dir, String ext, UnaryOperator<byte[]> resize) {
+  public CacheImage(String dir, String ext, UnaryOperator<byte[]> resize, boolean orgCache) {
     directory = dir;
     extension = ext;
     resizeFunction = resize;
+    isOriginCache = orgCache;
   }
 
   public CacheObject readOriginal(String key) {
@@ -66,7 +70,9 @@ public class CacheImage {
       String file = getFileName(key, false);
       byte[] bytes = restTemplate.getForObject(url, byte[].class);
       Files.write(Paths.get(directory, file), bytes, StandardOpenOption.CREATE);
-      put(file, bytes);
+      if (isOriginCache) {
+        put(file, bytes);
+      }
 
       if (resizeFunction != null) {
         file = getFileName(key, true);
@@ -81,6 +87,10 @@ public class CacheImage {
   }
 
   private void put(String key, byte[] bytes) {
+    if (cache.size() > 256) {
+      cache.clear();
+      log.info(directory + "のキャッシュを削除しました。");
+    }
     cache.put(key, new CacheObject(bytes, new Date()));
   }
 
