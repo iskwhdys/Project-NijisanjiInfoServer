@@ -9,7 +9,9 @@ import com.iskwhdys.project.domain.channel.ChannelEntity;
 import com.iskwhdys.project.domain.channel.ChannelRepository;
 import com.iskwhdys.project.domain.channel.ChannelSpecification;
 import com.iskwhdys.project.infra.youtube.ChannelFeedXml;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @Transactional
 public class ChannelService {
@@ -38,10 +40,12 @@ public class ChannelService {
   public List<ChannelEntity> updateAll() {
     var channels = channelRepository.findAll();
     for (var channel : channels) {
-      channelSpecification.update(channel);
-      channelImageService.downloadThumbnail(channel);
-
-      channelRepository.save(channel);
+      try {
+        channelSpecification.update(channel);
+        channelImageService.downloadThumbnail(channel);
+      } catch (Exception e) {
+        log.error(e.getMessage(), e);
+      }
     }
     channelRepository.saveAll(channels);
     return channels;
@@ -50,7 +54,11 @@ public class ChannelService {
   public void xmlUpdate() {
     var channels = channelRepository.findAll();
     for (var channel : channels) {
-      channel.setTitle(ChannelFeedXml.getChannelTitle(channel.getId()));
+      try {
+        channel.setTitle(ChannelFeedXml.getChannelTitle(channel.getId()));
+      } catch (Exception e) {
+        log.error(e.getMessage(), e);
+      }
     }
     channelRepository.saveAll(channels);
   }

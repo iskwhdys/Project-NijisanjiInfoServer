@@ -86,7 +86,7 @@ public class VideoController {
 
     if ("new".equals(mode)) {
       return vr.findByEnabledTrueAndTypeEqualsAndLiveScheduleBetweenOrderByLiveSchedule(
-          VideoEntity.TYPE_LIVE_RESERVE, getDaysDate(1), getDaysDate(-2));
+          VideoEntity.TYPE_LIVE_RESERVE, getDaysDate(0.5), getDaysDate(-2));
     } else if ("get".equals(mode)) {
       return vr.findTop30ByEnabledTrueAndTypeEqualsAndLiveScheduleAfterOrderByLiveSchedule(
           VideoEntity.TYPE_LIVE_RESERVE, Common.toDate(from));

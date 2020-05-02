@@ -95,6 +95,13 @@ public class ProcessController {
         videoService.update(60 * 24, false);
         channelService.updateAll();
         break;
+      case "updateChannel":
+        if(value != null && !value.equals("")) {
+          channelService.createOrUpdate(value);
+        }else {
+          channelService.updateAll();
+        }
+        break;
 
       case "videoMaintenance":
         videoService.update(60, true);

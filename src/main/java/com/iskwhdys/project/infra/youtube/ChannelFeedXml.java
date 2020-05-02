@@ -41,27 +41,33 @@ public class ChannelFeedXml {
 
     for (var channelId : channelIdList) {
 
-      Map<String, Element> elements;
-      ResponseEntity<byte[]> bytes;
+      try {
 
-      if (isCachedFeed(channelId)) {
-        bytes = feedHistory.get(channelId);
-        elements = elementHistory.get(channelId);
-      } else {
-        bytes = restTemplate.getForEntity(FEEDS_URL + channelId, byte[].class);
-        elements = bytesToIdAndElementMap(bytes.getBody());
-        if (elements == null) continue;
+        Map<String, Element> elements;
+        ResponseEntity<byte[]> bytes;
+
+        if (isCachedFeed(channelId)) {
+          bytes = feedHistory.get(channelId);
+          elements = elementHistory.get(channelId);
+        } else {
+          bytes = restTemplate.getForEntity(FEEDS_URL + channelId, byte[].class);
+          elements = bytesToIdAndElementMap(bytes.getBody());
+          if (elements == null) continue;
+        }
+
+        String cached = String.valueOf(isCachedFeed(channelId));
+        for (Element element : elements.values()) {
+          element.setAttribute(ATTRIBUTE_CACHED, cached);
+        }
+
+        feedHistory.put(channelId, bytes);
+        elementHistory.put(channelId, elements);
+
+        result.putAll(elements);
+
+      } catch (Exception e) {
+        log.error("チャンネル情報取得エラー：" + channelId);
       }
-
-      String cached = String.valueOf(isCachedFeed(channelId));
-      for (Element element : elements.values()) {
-        element.setAttribute(ATTRIBUTE_CACHED, cached);
-      }
-
-      feedHistory.put(channelId, bytes);
-      elementHistory.put(channelId, elements);
-
-      result.putAll(elements);
     }
     return result;
   }
