@@ -128,6 +128,7 @@ public class VideoSpecification {
             return VideoEntity.TYPE_LIVE_ARCHIVE;
         }
       }
+
       if ("uploaded".equals(video.getUploadStatus()) && getLiveType(video) != null) {
         return getLiveType(video);
       }
@@ -168,8 +169,23 @@ public class VideoSpecification {
   }
 
   private String getLiveType(VideoEntity video) {
-    if (video.getLiveStart() == null && video.getLiveEnd() == null)
-      return VideoEntity.TYPE_LIVE_RESERVE;
+    if (video.getLiveStart() == null && video.getLiveEnd() == null) {
+      if (video.getDuration() == 0) {
+        return VideoEntity.TYPE_LIVE_RESERVE;
+      } else {
+
+        log.info("一人リモート会議");
+        log.info(video.toString());
+        log.info("getCreateDate" + video.getCreateDate());
+        log.info("getUpdateDate" + video.getUpdateDate());
+        log.info("getUploadDate" + video.getUploadDate());
+        log.info("getLiveSchedule" + video.getLiveSchedule());
+        log.info("getLiveStart" + video.getLiveStart());
+        log.info("getLiveEnd" + video.getLiveEnd());
+        return VideoEntity.TYPE_PREMIER_RESERVE;
+      }
+    }
+
     if (video.getLiveStart() != null && video.getLiveEnd() == null)
       return VideoEntity.TYPE_LIVE_LIVE;
     if (video.getLiveStart() != null && video.getLiveEnd() != null)
@@ -197,64 +213,19 @@ public class VideoSpecification {
     // 20分更新：開始予定から1時間以内
     if (intervalMinute >= 20 && min < 60 * 12) return true;
     // 60分更新：開始予定から24時間以内
-    return (intervalMinute >= 60  &&  min < 60 * 24);
+    return (intervalMinute >= 60 && min < 60 * 24);
   }
 
   public boolean isUpdateLive(VideoEntity video, int intervalMinute) {
     long min = video.liveElapsedMinute();
 
     //  1分更新：更新しない
-    if(intervalMinute == 1) return false;
+    if (intervalMinute == 1) return false;
     //  5分更新：ライブ開始から 20分以内
-    if(intervalMinute >= 5 && min < 20) return true;
+    if (intervalMinute >= 5 && min < 20) return true;
     // 20分更新：ライブ開始から2時間以内
-    if(intervalMinute >= 20 && min < 60 * 2) return true;
+    if (intervalMinute >= 20 && min < 60 * 2) return true;
     // 60分更新：常時
     return (intervalMinute >= 60);
-
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

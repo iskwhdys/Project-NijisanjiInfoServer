@@ -1,5 +1,6 @@
 package com.iskwhdys.project.interfaces;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -22,7 +23,9 @@ public class BroadcasterController {
       return br.findAll();
     }
 
-    return br.findByYoutubeOrYoutube2(channelId,channelId);
+    var l = new ArrayList<BroadcasterEntity>();
+    l.add(br.findByYoutubeOrYoutube2(channelId,channelId));
+    return l;
   }
 
   @GetMapping("/api/broadcaster/{id}")

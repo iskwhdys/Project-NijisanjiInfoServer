@@ -1,10 +1,8 @@
 package com.iskwhdys.project.infra.twitter;
 
 import javax.annotation.PostConstruct;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
 import lombok.extern.slf4j.Slf4j;
 import twitter4j.Twitter;
 import twitter4j.TwitterFactory;

@@ -29,6 +29,9 @@ public class BroadcasterEntity {
   private String official;
   private String icon;
   private String wiki;
+  private String tagLive;
+  private String tagEx;
+  private String tagTweet;
 
   public String toString() {
     return "Broadcaster:[" + getId() + "] [" + getName() + "]";
