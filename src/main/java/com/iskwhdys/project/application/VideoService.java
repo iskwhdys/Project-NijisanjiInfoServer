@@ -54,7 +54,7 @@ public class VideoService {
     videoRepository.saveAll(videos);
   }
 
-  public void update(int intervalMinute, boolean isAllThumbnailUopdate) {
+  public void update(int intervalMinute, boolean isAllThumbnailUpdate) {
 
     Map<String, Element> elements = ChannelFeedXml.getVideoElement(channelService.getIds());
     List<VideoEntity> videos = new ArrayList<>();
@@ -83,9 +83,24 @@ public class VideoService {
 
     int xmlSize = videos.size();
     var videoIds = videos.stream().map(VideoEntity::getId).collect(Collectors.toList());
-    videos.addAll(updateNoXmlVideos(videoIds, intervalMinute, isAllThumbnailUopdate));
+    videos.addAll(updateNoXmlVideos(videoIds, intervalMinute, isAllThumbnailUpdate));
 
     log.info("VideoCount:" + xmlSize + "/" + videos.size());
+
+    videoRepository.saveAll(videos);
+  }
+
+  public void updateAllReserve() {
+
+    var videos = videoRepository.findByEnabledTrueAndTypeIn(VideoEntity.TYPE_RESERVES);
+
+    for (VideoEntity video : videos) {
+      try {
+        videoSpecification.updateReserveInfoViaApi(video);
+      } catch (Exception e) {
+        log.error(e.getMessage(), e);
+      }
+    }
 
     videoRepository.saveAll(videos);
   }

@@ -29,38 +29,53 @@ public class ProcessController {
 
   @Autowired YoutubeApi youtubeApi;
 
+  String runningProcess = "";
+
   @Scheduled(cron = "0 * * * * *", zone = "Asia/Tokyo")
   public void cronPerMinute() {
+
+    if(!runningProcess.equals("")) {
+      log.info("process runnning:" + runningProcess);
+      return;
+    }
+
     if (!youtubeApi.enabled()) {
       return;
     }
 
-    int min = new Date().getMinutes();
-    if (min == 0) {
-      log.info("cronPerMinute 60 start");
-      videoService.update(60, false);
-      sitemapService.update();
-      log.info("cronPerMinute 60 end");
-    } else if (min % 20 == 0) {
-      log.info("cronPerMinute 20 start");
-      videoService.update(20, false);
-      log.info("cronPerMinute 20 end");
-    } else if (min % 5 == 0) {
-      log.info("cronPerMinute 5  start");
-      videoService.update(5, false);
-      log.info("cronPerMinute 5  end");
-    } else {
-      log.info("cronPerMinute 1  start");
-      videoService.update(1, false);
-      log.info("cronPerMinute 1  end");
+    try {
+      int min = new Date().getMinutes();
+      if (min == 0) {
+        log.info("cronPerMinute 60 start");
+        videoService.update(60, false);
+        sitemapService.update();
+        log.info("cronPerMinute 60 end");
+      } else if (min % 20 == 0) {
+        log.info("cronPerMinute 20 start");
+        videoService.update(20, false);
+        log.info("cronPerMinute 20 end");
+      } else if (min % 5 == 0) {
+        log.info("cronPerMinute 5  start");
+        videoService.update(5, false);
+        log.info("cronPerMinute 5  end");
+      } else {
+        log.info("cronPerMinute 1  start");
+        videoService.update(1, false);
+        log.info("cronPerMinute 1  end");
+      }
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
     }
+    runningProcess = "";
   }
 
   @Scheduled(cron = "0 45 16 * * *", zone = "Asia/Tokyo")
   public void cron1day() {
+
     if (youtubeApi.enabled()) {
       log.info("cron1day start");
       videoService.update(60 * 24, false);
+      videoService.updateAllReserve();
       channelService.updateAll();
       log.info("cron1day end");
     } else {
@@ -77,50 +92,72 @@ public class ProcessController {
       @RequestParam String name,
       @RequestParam String pass,
       @RequestParam(required = false) String value) {
+
+    if(!runningProcess.equals("")) {
+      String msg = "process runnning:" + runningProcess;
+      log.info(msg);
+      return msg;
+    }
+
     log.info("process-start:" + name);
 
+    runningProcess = "batch:name=" + name + ":pass=" + pass + "value=" + value;
+
     if (!password.equals(pass)) {
+      runningProcess ="";
       return "Complate:" + name;
     }
 
-    switch (name) {
-      case "test":
-        break;
+    try {
+      switch (name) {
+        case "test":
+          break;
 
-      case "update":
-        videoService.update(Integer.parseInt(value), false);
-        break;
+        case "update":
+          videoService.update(Integer.parseInt(value), false);
+          break;
 
-      case "update1day":
-        videoService.update(60 * 24, false);
-        channelService.updateAll();
-        break;
-      case "updateChannel":
-        if(value != null && !value.equals("")) {
-          channelService.createOrUpdate(value);
-        }else {
+        case "update1day":
+          videoService.update(60 * 24, false);
           channelService.updateAll();
-        }
-        break;
+          break;
+        case "updateChannel":
+          if(value != null && !value.equals("")) {
+            channelService.createOrUpdate(value);
+          }else {
+            channelService.updateAll();
+          }
+          break;
 
-      case "videoMaintenance":
-        videoService.update(60, true);
-        break;
+        case "videoMaintenance":
+          videoService.update(60, true);
+          break;
 
-      case "tweet":
-        tweetService.tweet(value);
-        break;
+        case "updateAllReserve":
+          videoService.updateAllReserve();
+          break;
 
-      case "xmlUpdate":
-        channelService.xmlUpdate();
-        videoService.xmlUpdate();
-        break;
+        case "tweet":
+          tweetService.tweet(value);
+          break;
 
-      default:
-        return name;
+        case "xmlUpdate":
+          channelService.xmlUpdate();
+          videoService.xmlUpdate();
+          break;
+
+        default:
+          runningProcess ="";
+          return name;
+      }
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
     }
 
     log.info("process-end:" + name);
+
+    runningProcess ="";
+
     return "Complate:" + name;
   }
 }
