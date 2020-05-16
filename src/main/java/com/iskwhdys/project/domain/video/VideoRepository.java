@@ -57,6 +57,9 @@ public interface VideoRepository
   List<VideoEntity> findByEnabledTrueAndTypeEqualsAndLiveScheduleBetweenOrderByLiveSchedule(
       String of, Date start, Date end);
 
+  List<VideoEntity> findByEnabledTrueAndTypeInAndLiveScheduleBetweenOrderByLiveSchedule(
+      List<String> of, Date start, Date end);
+
   List<VideoEntity> findByEnabledTrueAndTypeIn(List<String> of);
 
   List<VideoEntity> findTop10ByEnabledTrueAndTypeEqualsAndLiveScheduleAfterOrderByLiveSchedule(

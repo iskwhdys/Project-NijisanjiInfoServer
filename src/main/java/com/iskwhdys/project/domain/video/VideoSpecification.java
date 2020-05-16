@@ -203,17 +203,17 @@ public class VideoSpecification {
     // 視聴数がある動画は既に配信しているので対象 (プレミアはviewsが0じゃないこともあるのでライブのみ)
     if (video.getViews() > 0 && video.isLiveReserve()) return true;
 
-    // 配信開始前もしくは 配信予定日時が24時間を超えた動画は除外
-    if (min < 0 || min > 60 * 24) return false;
+    //    // 配信開始前もしくは 配信予定日時が24時間を超えた動画は除外
+    //    if (min < 0 || min > 60 * 24) return false;
 
     //  1分更新：開始予定から10分以内
-    if (intervalMinute >= 1 && min < 10) return true;
+    if (intervalMinute >= 1 && min >= 0 && min < 10) return true;
     //  5分更新：開始予定から30分以内
-    if (intervalMinute >= 5 && min < 60 * 4) return true;
+    if (intervalMinute >= 5 && min >= 0 && min < 60 * 4) return true;
     // 20分更新：開始予定から1時間以内
-    if (intervalMinute >= 20 && min < 60 * 12) return true;
-    // 60分更新：開始予定から24時間以内
-    return (intervalMinute >= 60 && min < 60 * 24);
+    if (intervalMinute >= 20 && min >= 0 && min < 60 * 12) return true;
+    // 60分更新：開始予定の2日前から翌日のもの
+    return (intervalMinute >= 60 && min >= (60 * 24 * 2 * -1) && min < 60 * 24);
   }
 
   public boolean isUpdateLive(VideoEntity video, int intervalMinute) {

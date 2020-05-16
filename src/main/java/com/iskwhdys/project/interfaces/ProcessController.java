@@ -14,6 +14,7 @@ import com.iskwhdys.project.application.ChannelService;
 import com.iskwhdys.project.application.SitemapService;
 import com.iskwhdys.project.application.TweetService;
 import com.iskwhdys.project.application.VideoService;
+import com.iskwhdys.project.domain.video.VideoRepository;
 import com.iskwhdys.project.infra.youtube.YoutubeApi;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,12 +30,15 @@ public class ProcessController {
 
   @Autowired YoutubeApi youtubeApi;
 
+  @Autowired VideoRepository videoRepository;
+
+
   String runningProcess = "";
 
   @Scheduled(cron = "0 * * * * *", zone = "Asia/Tokyo")
   public void cronPerMinute() {
 
-    if(!runningProcess.equals("")) {
+    if (!runningProcess.equals("")) {
       log.info("process runnning:" + runningProcess);
       return;
     }
@@ -42,6 +46,8 @@ public class ProcessController {
     if (!youtubeApi.enabled()) {
       return;
     }
+
+    runningProcess = new Date().toString();
 
     try {
       int min = new Date().getMinutes();
@@ -66,6 +72,13 @@ public class ProcessController {
     } catch (Exception e) {
       log.error(e.getMessage(), e);
     }
+
+    try {
+      tweetService.tweetReserves();
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    }
+
     runningProcess = "";
   }
 
@@ -93,7 +106,7 @@ public class ProcessController {
       @RequestParam String pass,
       @RequestParam(required = false) String value) {
 
-    if(!runningProcess.equals("")) {
+    if (!runningProcess.equals("")) {
       String msg = "process runnning:" + runningProcess;
       log.info(msg);
       return msg;
@@ -104,7 +117,7 @@ public class ProcessController {
     runningProcess = "batch:name=" + name + ":pass=" + pass + "value=" + value;
 
     if (!password.equals(pass)) {
-      runningProcess ="";
+      runningProcess = "";
       return "Complate:" + name;
     }
 
@@ -122,9 +135,9 @@ public class ProcessController {
           channelService.updateAll();
           break;
         case "updateChannel":
-          if(value != null && !value.equals("")) {
+          if (value != null && !value.equals("")) {
             channelService.createOrUpdate(value);
-          }else {
+          } else {
             channelService.updateAll();
           }
           break;
@@ -141,13 +154,21 @@ public class ProcessController {
           tweetService.tweet(value);
           break;
 
+        case "tweetReserve":
+          if (value != null && !value.equals("")) {
+            videoRepository.findById(value).ifPresent(video -> tweetService.tweetReserve(video));
+          } else {
+            tweetService.tweetReserves();
+          }
+          break;
+
         case "xmlUpdate":
           channelService.xmlUpdate();
           videoService.xmlUpdate();
           break;
 
         default:
-          runningProcess ="";
+          runningProcess = "";
           return name;
       }
     } catch (Exception e) {
@@ -156,7 +177,7 @@ public class ProcessController {
 
     log.info("process-end:" + name);
 
-    runningProcess ="";
+    runningProcess = "";
 
     return "Complate:" + name;
   }
