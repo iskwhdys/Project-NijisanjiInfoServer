@@ -11,11 +11,14 @@ import com.iskwhdys.project.domain.video.VideoRepository;
 import com.iskwhdys.project.infra.util.CacheImage;
 import com.iskwhdys.project.infra.util.CacheObject;
 import com.iskwhdys.project.infra.util.ImageEditor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class VideoThumbnailService {
 
-  @Autowired VideoRepository vr;
+  private @Autowired VideoRepository vr;
+  private @Autowired VideoDeliveryService vds;
 
   @Value("${nis.path.image.thunbnail}")
   String imageDirectory;
@@ -24,8 +27,22 @@ public class VideoThumbnailService {
   @PostConstruct
   public void init() {
     cacheImage = new CacheImage(imageDirectory, ".jpg", this::resize, false);
+
+    vds.live().forEach(this::loadImage);
+    vds.upload().forEach(this::loadImage);
+    vds.archive().forEach(this::loadImage);
+    vds.premier().forEach(this::loadImage);
+    vds.schedule().forEach(this::loadImage);
+    log.info("Complate VideoThumbnailService Init()");
   }
 
+  private void loadImage(VideoEntity v) {
+    try {
+      getThumbnailMini(v.getId());
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    }
+  }
   public CacheObject getThumbnailMini(String videoId) {
     CacheObject obj = cacheImage.readMini(videoId);
     if (obj != null) return obj;

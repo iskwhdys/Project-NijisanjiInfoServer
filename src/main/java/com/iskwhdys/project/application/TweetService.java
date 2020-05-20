@@ -100,9 +100,9 @@ public class TweetService {
       var str = new StringBuilder();
       str.append(time).append("から配信予定のライバーです。\r\n");
       str.append(String.join(" ", livers));
-//      str.append("\r\n");
-//      str.append("\r\n");
-//      str.append("その他の予約情報：https://nijisanji-live.com/schedules");
+      str.append("\r\n");
+      str.append("\r\n");
+      str.append("配信予定と現在配信中の情報はこちら：https://nijisanji-live.com/schedules");
       twitterApi.tweet(str.toString());
     } catch (Exception e) {
       log.error(e.getMessage(), e);
@@ -129,8 +129,9 @@ public class TweetService {
       } else {
         str.append(time).append("から").append(liver.getName()).append("が配信予定です。\r\n");
       }
-//      str.append("\r\n");
-//      str.append("その他の配信情報：https://nijisanji-live.com");
+
+      str.append("\r\n");
+      str.append("配信予定と現在配信中の情報はこちら：https://nijisanji-live.com/schedules");
 
       twitterApi.tweet(str.toString());
     } catch (Exception e) {

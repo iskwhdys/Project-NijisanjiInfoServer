@@ -214,7 +214,7 @@ public class VideoService {
     if (video.isPremierLive() || video.isLiveLive()) {
       tweetService.tweet(video);
     }
-    else if((video.isPremierLive() || video.isPremierReserve()) && video.scheduleElapsedMinute() < -30) {
+    else if((video.isPremierLive() || video.isPremierReserve()) && video.scheduleElapsedMinute() > -30) {
       tweetService.tweetReserve(video);
     }
     log.info("API New -> " + video.getType() + " " + video.toString());

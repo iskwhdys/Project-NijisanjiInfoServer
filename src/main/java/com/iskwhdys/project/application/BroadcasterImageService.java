@@ -5,12 +5,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResourceAccessException;
+import com.iskwhdys.project.domain.broadcaster.BroadcasterEntity;
 import com.iskwhdys.project.domain.broadcaster.BroadcasterRepository;
 import com.iskwhdys.project.domain.channel.ChannelEntity;
 import com.iskwhdys.project.infra.util.CacheImage;
 import com.iskwhdys.project.infra.util.CacheObject;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class BroadcasterImageService {
 
   @Autowired BroadcasterRepository br;
@@ -23,6 +26,18 @@ public class BroadcasterImageService {
   @PostConstruct
   public void init() {
     cacheImage = new CacheImage(imageDirectory, ".jpg");
+
+    br.findAll().forEach(this::loadImage);
+
+    log.info("Complate ChannelImageService Init()");
+  }
+
+  private void loadImage(BroadcasterEntity b) {
+    try {
+      getThumbnail(b.getId());
+    } catch (Exception e) {
+      // log.error(e.getMessage(), e);
+    }
   }
 
   public CacheObject getThumbnail(String broadcasterId) {
@@ -38,7 +53,7 @@ public class BroadcasterImageService {
       throw new ResourceAccessException("Not found channel id");
     }
     if (!cacheImage.download(broadcasterId, entity.get().getIcon())) {
-      throw new ResourceAccessException("Download error");
+      throw new ResourceAccessException("Download error:" + entity.get().getName());
     }
 
     return cacheImage.read(broadcasterId, mini);

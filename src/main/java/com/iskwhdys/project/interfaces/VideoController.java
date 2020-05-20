@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.iskwhdys.project.Common;
+import com.iskwhdys.project.application.VideoDeliveryService;
 import com.iskwhdys.project.domain.video.VideoEntity;
 import com.iskwhdys.project.domain.video.VideoRepository;
 
@@ -19,13 +20,13 @@ import com.iskwhdys.project.domain.video.VideoRepository;
 @RequestMapping("/api/video")
 public class VideoController {
 
-  @Autowired VideoRepository vr;
+  private @Autowired VideoDeliveryService vds;
+  private @Autowired VideoRepository vr;
 
   @GetMapping("/live")
   public List<VideoEntity> getsLive(@RequestParam String mode) {
-    if ("new".equals(mode)) {
-      return vr.findByEnabledTrueAndTypeInOrderByLiveStartDesc(VideoEntity.TYPE_LIVES);
-    }
+
+    if ("new".equals(mode)) return vds.live();
     return new ArrayList<>();
   }
 
@@ -33,20 +34,8 @@ public class VideoController {
   public List<VideoEntity> getUpload(
       @RequestParam String mode, @RequestParam(required = false) String from) {
 
-    if ("new".equals(mode)) {
-      var list =
-          vr.findByEnabledTrueAndTypeInAndUploadDateBetweenOrderByUploadDateDesc(
-              VideoEntity.TYPE_UPLOADS, getDaysDate(2), new Date());
-      if (list.isEmpty()) {
-        list =
-            vr.findTop10ByEnabledTrueAndTypeInAndUploadDateBeforeOrderByUploadDateDesc(
-                VideoEntity.TYPE_UPLOADS, new Date());
-      }
-      return list;
-    } else if ("get".equals(mode)) {
-      return vr.findTop10ByEnabledTrueAndTypeInAndUploadDateBeforeOrderByUploadDateDesc(
-          VideoEntity.TYPE_UPLOADS, Common.toDate(from));
-    }
+    if ("new".equals(mode)) return vds.upload();
+    if ("get".equals(mode)) return vds.upload(from);
     return new ArrayList<>();
   }
 
@@ -54,15 +43,8 @@ public class VideoController {
   public List<VideoEntity> getArchive(
       @RequestParam String mode, @RequestParam(required = false) String from) {
 
-    if ("new".equals(mode)) {
-      return vr.findTop30ByEnabledTrueAndTypeEqualsAndLiveStartBeforeOrderByLiveStartDesc(
-          VideoEntity.TYPE_LIVE_ARCHIVE, new Date());
-    }
-
-    else if ("get".equals(mode)) {
-      return vr.findTop30ByEnabledTrueAndTypeEqualsAndLiveStartBeforeOrderByLiveStartDesc(
-          VideoEntity.TYPE_LIVE_ARCHIVE, Common.toDate(from));
-    }
+    if ("new".equals(mode)) return vds.archive();
+    if ("get".equals(mode)) return vds.archive(from);
     return new ArrayList<>();
   }
 
@@ -70,13 +52,8 @@ public class VideoController {
   public List<VideoEntity> getPremier(
       @RequestParam String mode, @RequestParam(required = false) String from) {
 
-    if ("new".equals(mode)) {
-      return vr.findByEnabledTrueAndTypeEqualsAndLiveScheduleBetweenOrderByLiveSchedule(
-          VideoEntity.TYPE_PREMIER_RESERVE, getDaysDate(1), getDaysDate(-2));
-    } else if ("get".equals(mode)) {
-      return vr.findTop10ByEnabledTrueAndTypeEqualsAndLiveScheduleAfterOrderByLiveSchedule(
-          VideoEntity.TYPE_PREMIER_RESERVE, Common.toDate(from));
-    }
+    if ("new".equals(mode)) return vds.premier();
+    if ("get".equals(mode)) return vds.premier(from);
     return new ArrayList<>();
   }
 
@@ -84,18 +61,16 @@ public class VideoController {
   public List<VideoEntity> getSchedule(
       @RequestParam String mode, @RequestParam(required = false) String from) {
 
-    if ("new".equals(mode)) {
-      return vr.findByEnabledTrueAndTypeEqualsAndLiveScheduleBetweenOrderByLiveSchedule(
-          VideoEntity.TYPE_LIVE_RESERVE, getDaysDate(0.5), getDaysDate(-2));
-    } else if ("get".equals(mode)) {
-      return vr.findTop30ByEnabledTrueAndTypeEqualsAndLiveScheduleAfterOrderByLiveSchedule(
-          VideoEntity.TYPE_LIVE_RESERVE, Common.toDate(from));
-    }
+    if ("new".equals(mode)) return vds.schedule();
+    if ("get".equals(mode)) return vds.schedule(from);
     return new ArrayList<>();
   }
 
   @GetMapping("/channel/{channelId}")
-  public List<VideoEntity> getChannel(@PathVariable String channelId,@RequestParam String mode, @RequestParam(required = false) String from) {
+  public List<VideoEntity> getChannel(
+      @PathVariable String channelId,
+      @RequestParam String mode,
+      @RequestParam(required = false) String from) {
 
     if ("new".equals(mode)) {
       return vr.findTop10ByEnabledTrueAndChannelIdEqualsAndUploadDateBeforeOrderByUploadDateDesc(
@@ -103,13 +78,8 @@ public class VideoController {
     } else if ("get".equals(mode)) {
       return vr.findTop10ByEnabledTrueAndChannelIdEqualsAndUploadDateBeforeOrderByUploadDateDesc(
           channelId, Common.toDate(from));
-     }
+    }
 
     return new ArrayList<>();
-
-  }
-
-  private Date getDaysDate(double day) {
-    return new Date(new Date().getTime() - (int)(1000 * 60 * 60 * 24 * day));
   }
 }
