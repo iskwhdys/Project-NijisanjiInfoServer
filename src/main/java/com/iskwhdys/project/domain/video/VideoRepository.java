@@ -40,35 +40,35 @@ public interface VideoRepository
 
 
 
-  List<VideoEntity> findByEnabledTrueAndTypeInOrderByLiveStartDesc(List<String> of);
+  List<VideoEntity> findByEnabledTrueAndTypeInOrderByLiveStartDescIdAsc(List<String> of);
 
-  List<VideoEntity> findByEnabledTrueAndTypeInAndUploadDateBetweenOrderByUploadDateDesc(
+  List<VideoEntity> findByEnabledTrueAndTypeInAndUploadDateBetweenOrderByUploadDateDescIdAsc(
       List<String> of, Date start, Date end);
 
-  List<VideoEntity> findTop10ByEnabledTrueAndTypeInAndUploadDateBeforeOrderByUploadDateDesc(
+  List<VideoEntity> findTop10ByEnabledTrueAndTypeInAndUploadDateBeforeOrderByUploadDateDescIdAsc(
       List<String> of, Date from);
 
-  List<VideoEntity> findByEnabledTrueAndTypeEqualsAndLiveStartBetweenOrderByLiveStartDesc(
+  List<VideoEntity> findByEnabledTrueAndTypeEqualsAndLiveStartBetweenOrderByLiveStartDescIdAsc(
       String of, Date start, Date end);
 
-  List<VideoEntity> findTop30ByEnabledTrueAndTypeEqualsAndLiveStartBeforeOrderByLiveStartDesc(
+  List<VideoEntity> findTop30ByEnabledTrueAndTypeEqualsAndLiveStartBeforeOrderByLiveStartDescIdAsc(
       String of, Date from);
 
-  List<VideoEntity> findByEnabledTrueAndTypeEqualsAndLiveScheduleBetweenOrderByLiveSchedule(
+  List<VideoEntity> findByEnabledTrueAndTypeEqualsAndLiveScheduleBetweenOrderByLiveScheduleAscIdAsc(
       String of, Date start, Date end);
 
-  List<VideoEntity> findByEnabledTrueAndTypeInAndLiveScheduleBetweenOrderByLiveSchedule(
+  List<VideoEntity> findByEnabledTrueAndTypeInAndLiveScheduleBetweenOrderByLiveScheduleAscIdAsc(
       List<String> of, Date start, Date end);
 
   List<VideoEntity> findByEnabledTrueAndTypeIn(List<String> of);
 
-  List<VideoEntity> findTop10ByEnabledTrueAndTypeEqualsAndLiveScheduleAfterOrderByLiveSchedule(
+  List<VideoEntity> findTop10ByEnabledTrueAndTypeEqualsAndLiveScheduleAfterOrderByLiveScheduleAscIdAsc(
       String of, Date from);
 
-  List<VideoEntity> findTop30ByEnabledTrueAndTypeEqualsAndLiveScheduleAfterOrderByLiveSchedule(
+  List<VideoEntity> findTop30ByEnabledTrueAndTypeEqualsAndLiveScheduleAfterOrderByLiveScheduleAscIdAsc(
       String of, Date from);
 
   List<VideoEntity>
-      findTop10ByEnabledTrueAndChannelIdEqualsAndUploadDateBeforeOrderByUploadDateDesc(
+      findTop10ByEnabledTrueAndChannelIdEqualsAndUploadDateBeforeOrderByUploadDateDescIdAsc(
           String of, Date from);
 }

@@ -63,7 +63,7 @@ public class TweetService {
   public void tweetReserves() {
 
     var videos =
-        videoRepository.findByEnabledTrueAndTypeInAndLiveScheduleBetweenOrderByLiveSchedule(
+        videoRepository.findByEnabledTrueAndTypeInAndLiveScheduleBetweenOrderByLiveScheduleAscIdAsc(
             VideoEntity.TYPE_RESERVES,
             new Date(new Date().getTime() + (1000 * 60 * 29)),
             new Date(new Date().getTime() + (1000 * 60 * 30)));

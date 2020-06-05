@@ -16,17 +16,17 @@ public class VideoDeliveryService {
   private @Autowired VideoRepository vr;
 
   public List<VideoEntity> live() {
-    return vr.findByEnabledTrueAndTypeInOrderByLiveStartDesc(VideoEntity.TYPE_LIVES);
+    return vr.findByEnabledTrueAndTypeInOrderByLiveStartDescIdAsc(VideoEntity.TYPE_LIVES);
   }
 
   public List<VideoEntity> upload() {
 
     var list =
-        vr.findByEnabledTrueAndTypeInAndUploadDateBetweenOrderByUploadDateDesc(
+        vr.findByEnabledTrueAndTypeInAndUploadDateBetweenOrderByUploadDateDescIdAsc(
             VideoEntity.TYPE_UPLOADS, getDaysDate(2), new Date());
     if (list.isEmpty()) {
       list =
-          vr.findTop10ByEnabledTrueAndTypeInAndUploadDateBeforeOrderByUploadDateDesc(
+          vr.findTop10ByEnabledTrueAndTypeInAndUploadDateBeforeOrderByUploadDateDescIdAsc(
               VideoEntity.TYPE_UPLOADS, new Date());
     }
 
@@ -34,40 +34,40 @@ public class VideoDeliveryService {
   }
 
   public List<VideoEntity> upload(String from) {
-    return vr.findTop10ByEnabledTrueAndTypeInAndUploadDateBeforeOrderByUploadDateDesc(
+    return vr.findTop10ByEnabledTrueAndTypeInAndUploadDateBeforeOrderByUploadDateDescIdAsc(
         VideoEntity.TYPE_UPLOADS, Common.toDate(from));
   }
 
   public List<VideoEntity> archive() {
 
-    return vr.findTop30ByEnabledTrueAndTypeEqualsAndLiveStartBeforeOrderByLiveStartDesc(
+    return vr.findTop30ByEnabledTrueAndTypeEqualsAndLiveStartBeforeOrderByLiveStartDescIdAsc(
         VideoEntity.TYPE_LIVE_ARCHIVE, new Date());
   }
 
   public List<VideoEntity> archive(String from) {
-    return vr.findTop30ByEnabledTrueAndTypeEqualsAndLiveStartBeforeOrderByLiveStartDesc(
+    return vr.findTop30ByEnabledTrueAndTypeEqualsAndLiveStartBeforeOrderByLiveStartDescIdAsc(
         VideoEntity.TYPE_LIVE_ARCHIVE, Common.toDate(from));
   }
 
   public List<VideoEntity> premier() {
 
-    return vr.findByEnabledTrueAndTypeEqualsAndLiveScheduleBetweenOrderByLiveSchedule(
+    return vr.findByEnabledTrueAndTypeEqualsAndLiveScheduleBetweenOrderByLiveScheduleAscIdAsc(
         VideoEntity.TYPE_PREMIER_RESERVE, getDaysDate(1), getDaysDate(-2));
   }
 
   public List<VideoEntity> premier(String from) {
-    return vr.findTop10ByEnabledTrueAndTypeEqualsAndLiveScheduleAfterOrderByLiveSchedule(
+    return vr.findTop10ByEnabledTrueAndTypeEqualsAndLiveScheduleAfterOrderByLiveScheduleAscIdAsc(
         VideoEntity.TYPE_PREMIER_RESERVE, Common.toDate(from));
   }
 
   public List<VideoEntity> schedule() {
 
-    return vr.findByEnabledTrueAndTypeEqualsAndLiveScheduleBetweenOrderByLiveSchedule(
+    return vr.findByEnabledTrueAndTypeEqualsAndLiveScheduleBetweenOrderByLiveScheduleAscIdAsc(
         VideoEntity.TYPE_LIVE_RESERVE, getDaysDate(0.5), getDaysDate(-2));
   }
 
   public List<VideoEntity> schedule(String from) {
-    return vr.findTop30ByEnabledTrueAndTypeEqualsAndLiveScheduleAfterOrderByLiveSchedule(
+    return vr.findTop30ByEnabledTrueAndTypeEqualsAndLiveScheduleAfterOrderByLiveScheduleAscIdAsc(
         VideoEntity.TYPE_LIVE_RESERVE, Common.toDate(from));
   }
 

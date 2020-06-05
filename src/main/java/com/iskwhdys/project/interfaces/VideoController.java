@@ -73,10 +73,10 @@ public class VideoController {
       @RequestParam(required = false) String from) {
 
     if ("new".equals(mode)) {
-      return vr.findTop10ByEnabledTrueAndChannelIdEqualsAndUploadDateBeforeOrderByUploadDateDesc(
+      return vr.findTop10ByEnabledTrueAndChannelIdEqualsAndUploadDateBeforeOrderByUploadDateDescIdAsc(
           channelId, new Date());
     } else if ("get".equals(mode)) {
-      return vr.findTop10ByEnabledTrueAndChannelIdEqualsAndUploadDateBeforeOrderByUploadDateDesc(
+      return vr.findTop10ByEnabledTrueAndChannelIdEqualsAndUploadDateBeforeOrderByUploadDateDescIdAsc(
           channelId, Common.toDate(from));
     }
 
