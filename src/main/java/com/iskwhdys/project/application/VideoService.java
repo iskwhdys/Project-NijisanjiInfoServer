@@ -7,13 +7,16 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.jdom2.Element;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.iskwhdys.project.domain.channel.ChannelRepository;
 import com.iskwhdys.project.domain.video.VideoEntity;
 import com.iskwhdys.project.domain.video.VideoFactory;
 import com.iskwhdys.project.domain.video.VideoRepository;
 import com.iskwhdys.project.domain.video.VideoSpecification;
 import com.iskwhdys.project.infra.youtube.ChannelFeedXml;
+import com.iskwhdys.project.infra.youtube.ChannelLive;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -22,12 +25,14 @@ import lombok.extern.slf4j.Slf4j;
 public class VideoService {
 
   @Autowired VideoRepository videoRepository;
+  @Autowired ChannelRepository channelRepository;
 
   @Autowired VideoSpecification videoSpecification;
   @Autowired VideoFactory videoFactory;
   @Autowired VideoThumbnailService videoThumbnailService;
   @Autowired TweetService tweetService;
   @Autowired ChannelService channelService;
+  @Autowired ChannelLive channelLive;
 
   public void xmlUpdate() {
 
@@ -52,6 +57,38 @@ public class VideoService {
     }
 
     videoRepository.saveAll(videos);
+  }
+
+  // @PostConstruct
+
+  @Scheduled(cron = "0 * * * * *", zone = "Asia/Tokyo")
+  public void updateChannel() {
+
+    System.out.println("開始：" + new Date());
+    // channelRepository.findByEnabledTrue().forEach(c -> channelLive.getHtml(c.getId()));
+    List<String> liveVideos = new ArrayList<String>();
+    channelRepository
+        .findByEnabledTrue()
+        .parallelStream()
+        .forEach(
+            c -> {
+              String id = channelLive.getId(c.getId());
+              if (id != null) {
+                liveVideos.add(id);
+              }
+            });
+
+    liveVideos.forEach(
+        id -> {
+          var video = videoRepository.findById(id);
+          if (video.isPresent()) {
+            System.out.println(video.get().getTitle());
+          } else {
+            System.out.println("配信なし：" + id);
+          }
+        });
+
+    System.out.println("終了：" + new Date());
   }
 
   public void update(int intervalMinute, boolean isAllThumbnailUpdate) {
@@ -213,8 +250,8 @@ public class VideoService {
     videoSpecification.updateEntity(video);
     if (video.isPremierLive() || video.isLiveLive()) {
       tweetService.tweet(video);
-    }
-    else if((video.isLiveReserve() || video.isPremierReserve()) && video.scheduleElapsedMinute() > -30) {
+    } else if ((video.isLiveReserve() || video.isPremierReserve())
+        && video.scheduleElapsedMinute() > -30) {
       tweetService.tweetReserve(video);
     }
     log.info("API New -> " + video.getType() + " " + video.toString());

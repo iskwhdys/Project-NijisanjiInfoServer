@@ -11,6 +11,7 @@ import com.iskwhdys.project.domain.video.VideoRepository;
 import com.iskwhdys.project.infra.util.CacheImage;
 import com.iskwhdys.project.infra.util.CacheObject;
 import com.iskwhdys.project.infra.util.ImageEditor;
+import com.iskwhdys.project.infra.youtube.YoutubeApi;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -19,20 +20,23 @@ public class VideoThumbnailService {
 
   private @Autowired VideoRepository vr;
   private @Autowired VideoDeliveryService vds;
+  private @Autowired YoutubeApi youtubeApi;
 
   @Value("${nis.path.image.thunbnail}")
   String imageDirectory;
+
   CacheImage cacheImage;
 
   @PostConstruct
   public void init() {
     cacheImage = new CacheImage(imageDirectory, ".jpg", this::resize, false);
-
-    vds.live().forEach(this::loadImage);
-    vds.upload().forEach(this::loadImage);
-    vds.archive().forEach(this::loadImage);
-    vds.premier().forEach(this::loadImage);
-    vds.schedule().forEach(this::loadImage);
+    if (youtubeApi.enabled()) {
+      vds.live().forEach(this::loadImage);
+      vds.upload().forEach(this::loadImage);
+      vds.archive().forEach(this::loadImage);
+      vds.premier().forEach(this::loadImage);
+      vds.schedule().forEach(this::loadImage);
+    }
     log.info("Complate VideoThumbnailService Init()");
   }
 
@@ -43,19 +47,28 @@ public class VideoThumbnailService {
       log.error(e.getMessage(), e);
     }
   }
+
   public CacheObject getThumbnailMini(String videoId) {
-    CacheObject obj = cacheImage.readMini(videoId);
+    return getThumbnails(videoId, true);
+  }
+
+  public CacheObject getThumbnail(String videoId) {
+    return getThumbnails(videoId, false);
+  }
+
+  private CacheObject getThumbnails(String videoId, boolean mini) {
+    CacheObject obj = cacheImage.read(videoId, mini);
     if (obj != null) return obj;
 
     var entity = vr.findById(videoId);
     if (entity.isEmpty()) {
-      throw new ResourceAccessException("Not found video id");
+      throw new ResourceAccessException("Not found channel id");
     }
     if (!cacheImage.download(videoId, entity.get().getThumbnailUrl())) {
       throw new ResourceAccessException("Download error");
     }
 
-    return cacheImage.readMini(videoId);
+    return cacheImage.read(videoId, mini);
   }
 
   public boolean downloadThumbnails(VideoEntity entity) {

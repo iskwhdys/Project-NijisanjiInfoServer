@@ -10,13 +10,15 @@ import com.iskwhdys.project.domain.broadcaster.BroadcasterRepository;
 import com.iskwhdys.project.domain.channel.ChannelEntity;
 import com.iskwhdys.project.infra.util.CacheImage;
 import com.iskwhdys.project.infra.util.CacheObject;
+import com.iskwhdys.project.infra.youtube.YoutubeApi;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
 public class BroadcasterImageService {
 
-  @Autowired BroadcasterRepository br;
+  private @Autowired BroadcasterRepository br;
+  private @Autowired YoutubeApi youtubeApi;
 
   @Value("${nis.path.image.broadcaster}")
   String imageDirectory;
@@ -27,7 +29,9 @@ public class BroadcasterImageService {
   public void init() {
     cacheImage = new CacheImage(imageDirectory, ".jpg");
 
-    br.findAll().forEach(this::loadImage);
+    if (youtubeApi.enabled()) {
+      br.findAll().forEach(this::loadImage);
+    }
 
     log.info("Complate ChannelImageService Init()");
   }

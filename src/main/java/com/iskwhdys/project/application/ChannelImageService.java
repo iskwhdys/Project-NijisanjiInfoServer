@@ -11,13 +11,15 @@ import com.iskwhdys.project.domain.channel.ChannelRepository;
 import com.iskwhdys.project.infra.util.CacheImage;
 import com.iskwhdys.project.infra.util.CacheObject;
 import com.iskwhdys.project.infra.util.ImageEditor;
+import com.iskwhdys.project.infra.youtube.YoutubeApi;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
 public class ChannelImageService {
 
-  @Autowired ChannelRepository cr;
+  private @Autowired ChannelRepository cr;
+  private @Autowired YoutubeApi youtubeApi;
 
   @Value("${nis.path.image.channel}")
   String imageDirectory;
@@ -27,8 +29,9 @@ public class ChannelImageService {
   @PostConstruct
   public void init() {
     cacheImage = new CacheImage(imageDirectory, ".jpg", this::resize, true);
-
-    cr.findAll().forEach(this::loadImage);
+    if (youtubeApi.enabled()) {
+      cr.findAll().forEach(this::loadImage);
+    }
 
     log.info("Complate ChannelImageService Init()");
   }

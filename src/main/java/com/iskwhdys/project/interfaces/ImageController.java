@@ -25,6 +25,10 @@ public class ImageController {
   @Autowired ChannelImageService channelImageService;
   @Autowired BroadcasterImageService broadcasterImageService;
 
+  @GetMapping("/video/{id}/thumbnail")
+  public ResponseEntity<byte[]> getVideoThumbnail(WebRequest swr, @PathVariable String id) {
+    return getResponse(swr, videoThumbnailService.getThumbnail(id));
+  }
   @GetMapping("/video/{id}/thumbnail_mini")
   public ResponseEntity<byte[]> getVideoThumbnailMini(WebRequest swr, @PathVariable String id) {
     return getResponse(swr, videoThumbnailService.getThumbnailMini(id));
