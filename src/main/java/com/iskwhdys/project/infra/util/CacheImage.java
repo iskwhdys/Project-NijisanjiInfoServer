@@ -87,7 +87,7 @@ public class CacheImage {
   }
 
   private void put(String key, byte[] bytes) {
-    if (cache.size() > 512) {
+    if (cache.size() > 768) {
       cache.clear();
       log.info(directory + "のキャッシュを削除しました。");
     }

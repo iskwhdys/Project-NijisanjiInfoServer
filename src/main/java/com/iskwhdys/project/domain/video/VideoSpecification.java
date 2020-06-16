@@ -217,15 +217,7 @@ public class VideoSpecification {
   }
 
   public boolean isUpdateLive(VideoEntity video, int intervalMinute) {
-    long min = video.liveElapsedMinute();
-
-    //  1分更新：更新しない
-    if (intervalMinute == 1) return false;
-    //  5分更新：ライブ開始から 20分以内
-    if (intervalMinute >= 5 && min < 20) return true;
-    // 20分更新：ライブ開始から2時間以内
-    if (intervalMinute >= 20 && min < 60 * 2) return true;
-    // 60分更新：常時
-    return (intervalMinute >= 60);
+    //  5分更新
+    return (intervalMinute >= 5);
   }
 }
