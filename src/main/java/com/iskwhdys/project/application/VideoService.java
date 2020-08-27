@@ -100,6 +100,7 @@ public class VideoService {
       Element element = set.getValue();
       var video = videoRepository.findById(set.getKey()).orElse(null);
 
+
       boolean added = false;
       if (video == null) {
         video = createNewVideo(element);
@@ -109,6 +110,7 @@ public class VideoService {
           videos.add(video);
           added = true;
         }
+        video.setEnabled(true);
         video = updateVideo(video, intervalMinute);
       }
 
