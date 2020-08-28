@@ -72,6 +72,7 @@ public class VideoService {
           videos.add(video);
           added = true;
         }
+        video.setEnabled(true);
         video = updateVideo(video, intervalMinute);
       }
 
@@ -215,7 +216,7 @@ public class VideoService {
       tweetService.tweet(video);
     }
     else if((video.isLiveReserve() || video.isPremierReserve()) && video.scheduleElapsedMinute() > -30) {
-      tweetService.tweetReserve(video);
+      // tweetService.tweetReserve(video);
     }
     log.info("API New -> " + video.getType() + " " + video.toString());
 
