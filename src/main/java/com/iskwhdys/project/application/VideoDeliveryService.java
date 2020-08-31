@@ -23,7 +23,7 @@ public class VideoDeliveryService {
 
     var list =
         vr.findByEnabledTrueAndTypeInAndUploadDateBetweenOrderByUploadDateDescIdAsc(
-            VideoEntity.TYPE_UPLOADS, getDaysDate(2), new Date());
+            VideoEntity.TYPE_UPLOADS, getDaysDate(1), new Date());
     if (list.isEmpty()) {
       list =
           vr.findTop10ByEnabledTrueAndTypeInAndUploadDateBeforeOrderByUploadDateDescIdAsc(
@@ -45,7 +45,7 @@ public class VideoDeliveryService {
   }
 
   public List<VideoEntity> archive(String from) {
-    return vr.findTop30ByEnabledTrueAndTypeEqualsAndLiveStartBeforeOrderByLiveStartDescIdAsc(
+    return vr.findTop60ByEnabledTrueAndTypeEqualsAndLiveStartBeforeOrderByLiveStartDescIdAsc(
         VideoEntity.TYPE_LIVE_ARCHIVE, Common.toDate(from));
   }
 

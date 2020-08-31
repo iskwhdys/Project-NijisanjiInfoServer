@@ -53,6 +53,8 @@ public interface VideoRepository
 
   List<VideoEntity> findTop30ByEnabledTrueAndTypeEqualsAndLiveStartBeforeOrderByLiveStartDescIdAsc(
       String of, Date from);
+  List<VideoEntity> findTop60ByEnabledTrueAndTypeEqualsAndLiveStartBeforeOrderByLiveStartDescIdAsc(
+      String of, Date from);
 
   List<VideoEntity> findByEnabledTrueAndTypeEqualsAndLiveScheduleBetweenOrderByLiveScheduleAscIdAsc(
       String of, Date start, Date end);
@@ -71,4 +73,7 @@ public interface VideoRepository
   List<VideoEntity>
       findTop10ByEnabledTrueAndChannelIdEqualsAndUploadDateBeforeOrderByUploadDateDescIdAsc(
           String of, Date from);
+  List<VideoEntity>
+  findTop30ByEnabledTrueAndChannelIdEqualsAndUploadDateBeforeOrderByUploadDateDescIdAsc(
+      String of, Date from);
 }

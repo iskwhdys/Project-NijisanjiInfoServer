@@ -76,7 +76,7 @@ public class VideoController {
       return vr.findTop10ByEnabledTrueAndChannelIdEqualsAndUploadDateBeforeOrderByUploadDateDescIdAsc(
           channelId, new Date());
     } else if ("get".equals(mode)) {
-      return vr.findTop10ByEnabledTrueAndChannelIdEqualsAndUploadDateBeforeOrderByUploadDateDescIdAsc(
+      return vr.findTop30ByEnabledTrueAndChannelIdEqualsAndUploadDateBeforeOrderByUploadDateDescIdAsc(
           channelId, Common.toDate(from));
     }
 
