@@ -207,9 +207,9 @@ public class VideoSpecification {
     //    if (min < 0 || min > 60 * 24) return false;
 
     //  1分更新：開始予定から10分以内
-    if (intervalMinute >= 1 && min >= 0 && min < 10) return true;
+    if (intervalMinute >= 1 && min >= -15 && min < 15) return true;
     //  5分更新：開始予定から30分以内
-    if (intervalMinute >= 5 && min >= 0 && min < 60 * 4) return true;
+    if (intervalMinute >= 5 && min >= -15 && min < 60 * 4) return true;
     // 20分更新：開始予定から1時間以内
     if (intervalMinute >= 20 && min >= 0 && min < 60 * 12) return true;
     // 60分更新：開始予定の2日前から翌日のもの

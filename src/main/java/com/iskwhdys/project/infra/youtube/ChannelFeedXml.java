@@ -2,12 +2,10 @@ package com.iskwhdys.project.infra.youtube;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.jdom2.DataConversionException;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
@@ -18,21 +16,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ChannelFeedXml {
 
-  private static final String ATTRIBUTE_CACHED = "cached";
   private static final String FEEDS_URL = "https://www.youtube.com/feeds/videos.xml?channel_id=";
   private static RestTemplate restTemplate = new RestTemplate();
-  private static Map<String, ResponseEntity<byte[]>> feedHistory = new HashMap<>();
-  private static Map<String, Map<String, Element>> elementHistory = new HashMap<>();
 
   private ChannelFeedXml() {}
 
   public static String getChannelTitle(String id) {
-    ResponseEntity<byte[]> bytes;
-    if (isCachedFeed(id)) {
-      bytes = feedHistory.get(id);
-    } else {
-      bytes = restTemplate.getForEntity(FEEDS_URL + id, byte[].class);
-    }
+    ResponseEntity<byte[]> bytes = restTemplate.getForEntity(FEEDS_URL + id, byte[].class);
     return bytesToChannelTitle(bytes.getBody());
   }
 
@@ -46,22 +36,9 @@ public class ChannelFeedXml {
         Map<String, Element> elements;
         ResponseEntity<byte[]> bytes;
 
-        if (isCachedFeed(channelId)) {
-          bytes = feedHistory.get(channelId);
-          elements = elementHistory.get(channelId);
-        } else {
-          bytes = restTemplate.getForEntity(FEEDS_URL + channelId, byte[].class);
-          elements = bytesToIdAndElementMap(bytes.getBody());
-          if (elements == null) continue;
-        }
-
-        String cached = String.valueOf(isCachedFeed(channelId));
-        for (Element element : elements.values()) {
-          element.setAttribute(ATTRIBUTE_CACHED, cached);
-        }
-
-        feedHistory.put(channelId, bytes);
-        elementHistory.put(channelId, elements);
+        bytes = restTemplate.getForEntity(FEEDS_URL + channelId, byte[].class);
+        elements = bytesToIdAndElementMap(bytes.getBody());
+        if (elements == null) continue;
 
         result.putAll(elements);
 
@@ -72,22 +49,6 @@ public class ChannelFeedXml {
     return result;
   }
 
-  public static boolean isUncachedElement(Element element) {
-    try {
-      return !element.getAttribute(ATTRIBUTE_CACHED).getBooleanValue();
-    } catch (DataConversionException e) {
-      log.error(e.getMessage(), e);
-      return true;
-    }
-  }
-
-  private static boolean isCachedFeed(String channelId) {
-    if (feedHistory.containsKey(channelId)) {
-      return (new Date().getTime() < feedHistory.get(channelId).getHeaders().getExpires());
-    } else {
-      return false;
-    }
-  }
 
   private static Map<String, Element> bytesToIdAndElementMap(byte[] xmlBytes) {
 

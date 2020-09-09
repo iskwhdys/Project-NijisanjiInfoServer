@@ -63,23 +63,15 @@ public class VideoService {
       Element element = set.getValue();
       var video = videoRepository.findById(set.getKey()).orElse(null);
 
-      boolean added = false;
       if (video == null) {
         video = createNewVideo(element);
       } else {
-        if (ChannelFeedXml.isUncachedElement(element)) {
-          videoFactory.updateViaXmlElement(element, video);
-          videos.add(video);
-          added = true;
-        }
+        videoFactory.updateViaXmlElement(element, video);
         video.setEnabled(true);
-        video = updateVideo(video, intervalMinute);
+        updateVideo(video, intervalMinute);
       }
 
-      if (video != null && !added) {
-        video.setUpdateDate(new Date());
-        videos.add(video);
-      }
+      videos.add(video);
     }
 
     int xmlSize = videos.size();
@@ -214,8 +206,8 @@ public class VideoService {
     videoSpecification.updateEntity(video);
     if (video.isPremierLive() || video.isLiveLive()) {
       tweetService.tweet(video);
-    }
-    else if((video.isLiveReserve() || video.isPremierReserve()) && video.scheduleElapsedMinute() > -30) {
+    } else if ((video.isLiveReserve() || video.isPremierReserve())
+        && video.scheduleElapsedMinute() > -30) {
       // tweetService.tweetReserve(video);
     }
     log.info("API New -> " + video.getType() + " " + video.toString());
