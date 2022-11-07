@@ -36,7 +36,7 @@ public class BroadcasterImageService {
     try {
       getThumbnail(b.getId());
     } catch (Exception e) {
-      // log.error(e.getMessage(), e);
+      log.error(e.getMessage(), e);
     }
   }
 

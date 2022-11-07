@@ -1,10 +1,8 @@
 package com.iskwhdys.project.domain.channel;
 
 import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import com.iskwhdys.project.infra.youtube.YoutubeApi;
 
 @Component
@@ -19,7 +17,7 @@ public class ChannelSpecification {
   @SuppressWarnings("unchecked")
   private ChannelEntity update(ChannelEntity channel, String... parts) {
     var items = youtubeApi.downloadChannelItems(channel.getId(), parts);
-    if (items.isEmpty()) {
+    if (items == null || items.isEmpty()) {
       return channel;
     }
     Map<String, ?> item = items.get(0);

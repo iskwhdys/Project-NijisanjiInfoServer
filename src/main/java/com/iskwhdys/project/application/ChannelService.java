@@ -45,6 +45,7 @@ public class ChannelService {
         channelImageService.downloadThumbnail(channel);
       } catch (Exception e) {
         log.error(e.getMessage(), e);
+        log.error(channel.toString());
       }
     }
     channelRepository.saveAll(channels);
@@ -58,6 +59,7 @@ public class ChannelService {
         channel.setTitle(ChannelFeedXml.getChannelTitle(channel.getId()));
       } catch (Exception e) {
         log.error(e.getMessage(), e);
+        log.error(channel.toString());
       }
     }
     channelRepository.saveAll(channels);
